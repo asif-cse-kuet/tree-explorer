@@ -15,8 +15,8 @@ onMounted(() => {});
             <Tree>
                 <Breadcrumb :path="['Tree']"/>
             </Tree>
-            <Json>
-                <Breadcrumb :path="['auto', 'driver_type']"/>
+            <Json v-slot="{ breadcrumbPath }">
+                <Breadcrumb :path="breadcrumbPath"/>
             </Json>
         </Layout>
     </div>

@@ -1,11 +1,27 @@
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useTreeStore } from '../../stores';
 import JsonInput from './JsonInput.vue';
 
 const treeStore = useTreeStore();
 const jsonInputRef = ref(null);
+
+const breadcrumbPath = computed(() => {
+  const data = treeStore.jsonData;
+  if (!data || typeof data !== 'object') return [];
+  
+  const rootKey = Object.keys(data)[0];
+  if (!rootKey) return [];
+  
+  const rootValue = data[rootKey];
+  if (!rootValue || typeof rootValue !== 'object') return [rootKey];
+  
+  const firstChildKey = Object.keys(rootValue)[0];
+  if (!firstChildKey) return [rootKey];
+  
+  return [rootKey, firstChildKey];
+});
 
 const openJsonInput = () => {
   jsonInputRef.value?.openDialog();
@@ -40,7 +56,7 @@ const formatJson = (obj) => {
 
 <template>
   <div>
-    <slot></slot>
+    <slot :breadcrumbPath="breadcrumbPath"></slot>
     <div class="bg-white border border-gray-300 rounded p-4 flex flex-col h-110 w-full sm:w-96 lg:w-96">
       <!-- Header with button -->
       <div class="flex justify-end items-center mb-0">
