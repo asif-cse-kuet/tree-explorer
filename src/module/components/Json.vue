@@ -83,7 +83,13 @@ const formatJson = (obj) => {
 </template>
 
 <style scoped>
-/* Fallback scrollbar for non-webkit browsers */
+/* Scrollbar styles for Firefox */
+div {
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af #f3f4f6;
+}
+
+/* Scrollbar styles for WebKit browsers (Chrome, Safari, Edge) */
 div::-webkit-scrollbar {
   width: 6px;
 }
