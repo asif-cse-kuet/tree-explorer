@@ -36,7 +36,7 @@ const hasChildren = (value) => {
 </script>
 
 <template>
-  <div class="tree__node" :style="{ paddingLeft: level > 0 ? '35px' : '0' }">
+  <div class="tree__node" :class="{ 'tree__node--root': level === 0 }" :style="{ paddingLeft: level > 0 ? '35px' : '0' }">
     <div class="node-header" @click="hasChildren(nodeValue) && toggleNode()">
       <!-- Arrow icon for nodes with children -->
       <span v-if="hasChildren(nodeValue)" class="toggle-arrow">
@@ -100,6 +100,10 @@ const hasChildren = (value) => {
   border-bottom: 2px solid #5d5e5e;
 }
 
+.tree__node--root > .node-header:before {
+  display: none;
+}
+
 .tree__node:after {
   content: "";
   position: absolute;
@@ -109,6 +113,10 @@ const hasChildren = (value) => {
   right: auto;
   left: 12px;
   border-left: 2px solid #5d5e5e;
+}
+
+.tree__node--root:after {
+  display: none;
 }
 
 .tree__node:last-child:after {

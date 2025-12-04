@@ -1,21 +1,18 @@
 
 <script setup>
 import { useTreeStore } from '../../stores';
-import TreeNode from './TreeNode.vue';
 
 const treeStore = useTreeStore();
 </script>
 
 <template>
   <div>
-    <slot></slot>
+    <slot name="breadcrumb"></slot>
     <div class="bg-white border border-gray-300 rounded p-4 flex flex-col h-110 w-full sm:w-96 lg:w-96">
       <div class="flex-1 overflow-y-auto p-3 font-mono text-normal text-gray-800 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
         <div class="tree">
-          <!-- Render tree recursively -->
-          <div v-for="(value, key) in treeStore.jsonData" :key="key" class="tree__root">
-            <TreeNode :nodeKey="String(key)" :nodeValue="value" :path="`root.${key}`" :level="0" />
-          </div>
+          <!-- Render tree recursively via slot -->
+          <slot name="tree" :jsonData="treeStore.jsonData"></slot>
         </div>
       </div>
     </div>
