@@ -1,15 +1,3 @@
-const DEFAULT_JSON = {
-  "name": "John Doe",
-  "age": 30,
-  "email": "john@example.com",
-  "skills": ["Vue", "React", "Node.js"],
-  "address": {
-    "street": "123 Main St",
-    "city": "New York",
-    "country": "USA"
-  }
-};
-
 export default {
   setJsonData (jsonInput) {
     try {
@@ -19,10 +7,9 @@ export default {
       // Trim input
       let trimmedInput = jsonInput.trim();
 
-      // If empty, use default
+      // If empty, show error
       if (!trimmedInput) {
-        this.jsonData = DEFAULT_JSON;
-        return;
+        throw new Error('JSON input cannot be empty');
       }
 
       // Remove trailing commas before closing braces/brackets (common JSON5 pattern)
@@ -37,6 +24,12 @@ export default {
       }
 
       this.jsonData = parsedData;
+      
+      // Set root node as selected by default
+      const rootKey = Object.keys(parsedData)[0];
+      if (rootKey) {
+        this.selectedPath = [rootKey];
+      }
     } catch (err) {
       this.error = err.message || 'Invalid JSON format';
       // Don't change jsonData on error, keep current one
@@ -45,12 +38,16 @@ export default {
     }
   },
 
+  setSelectedPath (path) {
+    this.selectedPath = path;
+  },
+
   clearError () {
     this.error = '';
   },
 
-  resetToDefault () {
-    this.jsonData = DEFAULT_JSON;
+  clearJsonData () {
+    this.jsonData = null;
     this.error = '';
   },
 

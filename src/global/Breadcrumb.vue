@@ -13,10 +13,10 @@ onMounted(() => {});
 </script>
 
 <template>
-  <div class="flex items-center gap-2 text-sm">
+  <div class="flex flex-wrap items-center gap-1 text-sm">
     <template v-for="(item, index) in path" :key="index">
       <span 
-        class="px-2 py-1 rounded text-black font-semibold hover:bg-gray-300 cursor-pointer text-xl transition-colors"
+        class="px-1 py-1 rounded text-black font-semibold hover:bg-gray-300 cursor-pointer text-xl transition-colors whitespace-nowrap"
       >
         {{ item }}
       </span>
@@ -26,7 +26,7 @@ onMounted(() => {});
         fill="none"
         stroke="currentColor" 
         stroke-width="4"
-        class="w-3 h-3"
+        class="w-4 h-4 flex-shrink-0"
       >
         <path  
           stroke-linecap="round" 
@@ -35,7 +35,7 @@ onMounted(() => {});
         />
       </svg>
     </template>
-    <span v-if="!path || path.length === 0" class="text-gray-400 italic">No path selected</span>
+    <span v-if="!path || path.length === 0" class="px-2 py-1 rounded text-gray-400 font-semibold text-xl whitespace-nowrap">No path selected</span>
   </div>
 </template>
 

@@ -1,5 +1,8 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { useTreeStore } from '../../stores';
+
+const treeStore = useTreeStore();
 
 const props = defineProps({
   nodeKey: {
@@ -22,8 +25,26 @@ const props = defineProps({
 
 const isExpanded = ref(true);
 
-const toggleNode = () => {
-  isExpanded.value = !isExpanded.value;
+// Convert path string to array for comparison
+const pathArray = computed(() => {
+  return props.path.replace('root.', '').split('.');
+});
+
+const isSelected = computed(() => {
+  const selected = treeStore.selectedPath;
+  const current = pathArray.value;
+  return JSON.stringify(selected) === JSON.stringify(current);
+});
+
+const toggleNode = (e) => {
+  if (hasChildren(props.nodeValue)) {
+    e.stopPropagation();
+    isExpanded.value = !isExpanded.value;
+  }
+};
+
+const selectNode = () => {
+  treeStore.setSelectedPath(pathArray.value);
 };
 
 const isObject = (value) => {
@@ -37,9 +58,13 @@ const hasChildren = (value) => {
 
 <template>
   <div class="tree__node" :class="{ 'tree__node--root': level === 0 }" :style="{ paddingLeft: level > 0 ? '35px' : '0' }">
-    <div class="node-header" @click="hasChildren(nodeValue) && toggleNode()">
+    <div 
+      class="node-header" 
+      :class="{ 'node-header--selected': isSelected }"
+      @click="selectNode"
+    >
       <!-- Arrow icon for nodes with children -->
-      <span v-if="hasChildren(nodeValue)" class="toggle-arrow">
+      <span v-if="hasChildren(nodeValue)" class="toggle-arrow" @click="toggleNode">
         <svg 
           :class="{ 'rotate-90': isExpanded }"
           class="arrow-icon"
@@ -87,6 +112,21 @@ const hasChildren = (value) => {
   align-items: center;
   position: relative;
   padding: 4px 0;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.node-header:hover {
+  background-color: #f3f4f6;
+}
+
+.node-header--selected {
+  background-color: #dbeafe;
+}
+
+.node-header--selected:hover {
+  background-color: #bfdbfe;
 }
 
 .node-header:before {
