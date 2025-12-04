@@ -1,5 +1,5 @@
 
-<script setup lang="ts">
+<script setup>
 import { onMounted } from 'vue';
 import Layout from '../components/Layout.vue';
 import Breadcrumb from '../../global/Breadcrumb.vue';
@@ -10,13 +10,16 @@ onMounted(() => {});
 </script>
 
 <template>
-  <div>
-    <Layout>
-      <Breadcrumb />
-      <Tree />
-      <Json />
-    </Layout>
-  </div>
+    <div class="flex justify-center items-center min-h-screen bg-gray-50 px-4 py-8">
+        <Layout>
+            <Tree>
+                <Breadcrumb :path="['Tree']"/>
+            </Tree>
+            <Json>
+                <Breadcrumb :path="['auto', 'driver_type']"/>
+            </Json>
+        </Layout>
+    </div>
 </template>
 
 <style lang="css" scoped>
