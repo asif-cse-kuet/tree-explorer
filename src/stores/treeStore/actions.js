@@ -180,5 +180,154 @@ export default {
         this.selectedPath = newPath;
       }
     }
+  },
+
+  moveNode (sourcePath, targetPath, dropPosition = 'before') {
+    if (!this.jsonData || !sourcePath || !targetPath || sourcePath.length === 0 || targetPath.length === 0) return;
+    
+    // Don't move a node to itself
+    if (JSON.stringify(sourcePath) === JSON.stringify(targetPath)) return;
+    
+    // Keep backup of original data for rollback
+    const backup = JSON.parse(JSON.stringify(this.jsonData));
+    
+    try {
+      // Work with cloned data
+      let data = JSON.parse(JSON.stringify(this.jsonData));
+      
+      // Extract source node
+      let sourceParent = data;
+      for (let i = 0; i < sourcePath.length - 1; i++) {
+        sourceParent = sourceParent[sourcePath[i]];
+      }
+      const sourceKey = sourcePath[sourcePath.length - 1];
+      const sourceNode = sourceParent[sourceKey];
+      
+      // Remove from source
+      delete sourceParent[sourceKey];
+      
+      // Determine destination
+      const sourceParentPath = sourcePath.slice(0, -1);
+      const targetParentPath = targetPath.slice(0, -1);
+      
+      if (dropPosition === 'inside') {
+        // Add inside target node
+        let targetNode = data;
+        for (const key of targetPath) {
+          targetNode = targetNode[key];
+        }
+        
+        if (typeof targetNode !== 'object' || targetNode === null || Array.isArray(targetNode)) {
+          throw new Error('Cannot drop inside a non-container node');
+        }
+        
+        targetNode[sourceKey] = sourceNode;
+        
+        // Update selection
+        if (JSON.stringify(this.selectedPath) === JSON.stringify(sourcePath)) {
+          this.selectedPath = [...targetPath, sourceKey];
+        }
+      } else {
+        // Add as sibling (before or after target)
+        let targetParent = data;
+        for (const key of targetParentPath) {
+          targetParent = targetParent[key];
+        }
+        const targetKey = targetPath[targetPath.length - 1];
+        
+        // Get all keys
+        const keys = Object.keys(targetParent);
+        const targetIndex = keys.indexOf(targetKey);
+        
+        if (targetIndex === -1) {
+          throw new Error('Target not found');
+        }
+        
+        // Calculate insert position
+        const insertIndex = dropPosition === 'before' ? targetIndex : targetIndex + 1;
+        
+        // Create new ordered object
+        const newParent = {};
+        let inserted = false;
+        
+        for (let i = 0; i < keys.length; i++) {
+          // Insert source at the right position
+          if (i === insertIndex && !inserted) {
+            newParent[sourceKey] = sourceNode;
+            inserted = true;
+          }
+          
+          // Add existing key (skip if it's the same as sourceKey from same parent)
+          const key = keys[i];
+          if (!(JSON.stringify(sourceParentPath) === JSON.stringify(targetParentPath) && key === sourceKey)) {
+            newParent[key] = targetParent[key];
+          }
+        }
+        
+        // If not inserted yet, add at end
+        if (!inserted) {
+          newParent[sourceKey] = sourceNode;
+        }
+        
+        // Replace parent by updating data reference
+        if (targetParentPath.length === 0) {
+          // Root level - replace the entire root object with the new ordered one
+          data = newParent;
+        } else {
+          // Nested - navigate and replace
+          let parent = data;
+          for (let i = 0; i < targetParentPath.length - 1; i++) {
+            parent = parent[targetParentPath[i]];
+          }
+          parent[targetParentPath[targetParentPath.length - 1]] = newParent;
+        }
+        
+        // Update selection - always update to new location
+        if (JSON.stringify(this.selectedPath) === JSON.stringify(sourcePath)) {
+          this.selectedPath = [...targetParentPath, sourceKey];
+        }
+      }
+      
+      // Force complete re-render by parsing and re-setting
+      this.jsonData = JSON.parse(JSON.stringify(data));
+      
+      // Verify the node exists at new location
+      let verifyParent = this.jsonData;
+      const verifyPath = dropPosition === 'inside' ? [...targetPath, sourceKey] : [...targetParentPath, sourceKey];
+      for (let i = 0; i < verifyPath.length - 1; i++) {
+        verifyParent = verifyParent[verifyPath[i]];
+      }
+      if (!(verifyPath[verifyPath.length - 1] in verifyParent)) {
+        throw new Error('Node not found at destination after move');
+      }
+      
+    } catch (error) {
+      console.error('Move operation failed:', error.message);
+      this.jsonData = backup;
+    }
+  },
+  
+  validateMoveResult(data, targetParentPath, sourceKey, dropPosition, targetPath) {
+    try {
+      // Navigate to where the node should be
+      let checkParent = data;
+      
+      if (dropPosition === 'inside') {
+        // Should be inside target
+        for (const key of targetPath) {
+          checkParent = checkParent[key];
+        }
+        return sourceKey in checkParent;
+      } else {
+        // Should be in target parent
+        for (const key of targetParentPath) {
+          checkParent = checkParent[key];
+        }
+        return sourceKey in checkParent;
+      }
+    } catch {
+      return false;
+    }
   }
 }
+
