@@ -136,6 +136,7 @@ const hasChildren = (value) => {
         class="node-label" 
         :class="{ 'cursor-pointer': hasChildren(nodeValue) }"
         @dblclick="startEditing"
+        title="Double click to edit"
       >
         {{ nodeKey }}
       </span>
