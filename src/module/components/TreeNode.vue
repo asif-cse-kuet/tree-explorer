@@ -10,7 +10,8 @@ const props = defineProps({
   nodeKey: String,
   nodeValue: [Object, String, Number, Boolean],
   path: String,
-  level: Number
+  level: Number,
+  isFirstChild: Boolean
 });
 
 const isExpanded = ref(true);
@@ -33,6 +34,11 @@ const hasChildren = (value) => {
   return isObject(value) && Object.keys(value).length > 0;
 };
 
+// Check if this node is the first child of a parent with children
+const isFirstChildOfParent = computed(() => {
+  return props.isFirstChild === true;
+});
+
 const toggleNode = (e) => {
   if (hasChildren(props.nodeValue)) {
     e.stopPropagation();
@@ -47,7 +53,7 @@ const selectNode = () => {
 
 <template>
   <div class="tree__node" :class="{ 'tree__node--root': level === 0 }" :style="{ paddingLeft: level > 0 ? '35px' : '0' }">
-    <TreeNodeDragHandler :nodeKey="nodeKey" :nodeValue="nodeValue" :path="path" :level="level" :isSelected="isSelected">
+    <TreeNodeDragHandler :nodeKey="nodeKey" :nodeValue="nodeValue" :path="path" :level="level" :isSelected="isSelected" :isFirstChildOfParent="isFirstChildOfParent">
       <template #default>
         <div 
           class="node-header group" 
@@ -81,12 +87,13 @@ const selectNode = () => {
     <!-- Children nodes -->
     <div v-if="hasChildren(nodeValue) && isExpanded" class="tree__children">
       <TreeNode 
-        v-for="(childValue, childKey) in nodeValue" 
+        v-for="(childValue, childKey, index) in nodeValue" 
         :key="`${path}.${childKey}`"
         :nodeKey="String(childKey)" 
         :nodeValue="childValue" 
         :path="`${path}.${childKey}`"
         :level="level + 1"
+        :isFirstChild="index === 0"
       />
     </div>
   </div>

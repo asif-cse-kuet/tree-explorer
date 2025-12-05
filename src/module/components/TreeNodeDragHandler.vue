@@ -7,13 +7,15 @@ const props = defineProps({
   nodeValue: [Object, String, Number, Boolean],
   path: String,
   level: Number,
-  isSelected: Boolean
+  isSelected: Boolean,
+  isFirstChildOfParent: Boolean
 });
 
 const treeStore = useTreeStore();
 const isDragging = ref(false);
 const isDragOver = ref(false);
 const dropPosition = ref(null); // 'before', 'after', or 'inside'
+const isParentSiblingDrop = ref(false); // true when dropping between parent and first child
 
 // Check if node value is a container (object), allow empty objects as drop targets
 const isContainer = computed(() => {
@@ -40,18 +42,11 @@ const dragEnd = () => {
   isDragging.value = false;
   isDragOver.value = false;
   dropPosition.value = null;
+  isParentSiblingDrop.value = false;
 };
 
 const dragOver = (e) => {
   const sourcePath = e.dataTransfer.getData('sourcePath');
-  
-  // Block drop if on immediate parent container
-  if (isContainer.value && isImmediateParentOfDraggedNode(sourcePath)) {
-    e.dataTransfer.dropEffect = 'none';
-    isDragOver.value = false;
-    dropPosition.value = null;
-    return;
-  }
   
   e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
@@ -71,6 +66,27 @@ const dragOver = (e) => {
     dropPosition.value = 'inside';
   }
   
+  // Block sibling drops on root level (level 0)
+  if (props.level === 0 && (dropPosition.value === 'before' || dropPosition.value === 'after')) {
+    dropPosition.value = null;
+    isDragOver.value = false;
+    isParentSiblingDrop.value = false;
+    e.dataTransfer.dropEffect = 'none';
+    return;
+  }
+  
+  // Detect if this is a parent-first-child boundary drop (before first child = sibling of parent)
+  isParentSiblingDrop.value = props.isFirstChildOfParent && dropPosition.value === 'before';
+  
+  // Block inside drop only if trying to drop parent inside immediate child
+  if (dropPosition.value === 'inside' && isContainer.value && isImmediateParentOfDraggedNode(sourcePath)) {
+    dropPosition.value = null;
+    isDragOver.value = false;
+    isParentSiblingDrop.value = false;
+    e.dataTransfer.dropEffect = 'none';
+    return;
+  }
+  
   isDragOver.value = true;
 };
 
@@ -81,19 +97,19 @@ const dragLeave = () => {
 const drop = (e) => {
   e.preventDefault();
   e.stopPropagation();
+  const currentDropPosition = dropPosition.value;
   isDragOver.value = false;
 
   const sourcePath = e.dataTransfer.getData('sourcePath');
   
-  // Don't drop on same node or on immediate parent
+  // Don't drop on same node
   if (!sourcePath || sourcePath === props.path) return;
-  if (isContainer.value && isImmediateParentOfDraggedNode(sourcePath)) return;
   
   // Parse paths and move node
   const sourceArray = sourcePath.replace('root.', '').split('.');
   const targetArray = props.path.replace('root.', '').split('.');
   
-  treeStore.moveNode(sourceArray, targetArray, dropPosition.value);
+  treeStore.moveNode(sourceArray, targetArray, currentDropPosition);
 };
 
 defineExpose({
@@ -111,7 +127,8 @@ defineExpose({
     @dragleave="dragLeave"
     @drop="drop"
     :class="{ 
-      'drag-over-before': isDragOver && dropPosition === 'before',
+      'drag-over-before': isDragOver && dropPosition === 'before' && !isParentSiblingDrop,
+      'drag-over-before-parent': isDragOver && dropPosition === 'before' && isParentSiblingDrop,
       'drag-over-after': isDragOver && dropPosition === 'after',
       'drag-over-inside': isDragOver && dropPosition === 'inside',
       'dragging': isDragging 
@@ -146,6 +163,17 @@ defineExpose({
   z-index: 10;
 }
 
+.draggable-node.drag-over-before-parent::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #f97316;
+  z-index: 10;
+}
+
 .draggable-node.drag-over-after::after {
   content: '';
   position: absolute;
@@ -158,9 +186,9 @@ defineExpose({
 }
 
 .draggable-node.drag-over-inside {
-  background-color: #dbeafe;
+  background-color: #dcfce7;
   border-radius: 4px;
-  outline: 2px dashed #3b82f6;
+  outline: 2px dashed #22c55e;
   outline-offset: -2px;
 }
 
