@@ -43,7 +43,7 @@ provide('handleTreeDelete', handleTreeDeleteRequest);
       </div>
       
       <!-- Show tree when data exists -->
-      <div v-else class="flex-1 overflow-y-auto p-3 font-mono text-normal text-gray-800 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+      <div v-else class="flex-1 overflow-y-auto overflow-x-auto p-3 font-mono text-normal text-gray-800 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
         <div class="tree">
           <!-- Render tree recursively via slot -->
           <slot name="tree" :jsonData="treeStore.jsonData"></slot>
@@ -88,6 +88,7 @@ div::-webkit-scrollbar-thumb:hover {
 /* Tree styles */
 .tree {
   user-select: none;
+  min-width: fit-content;
 }
 
 .tree__root {

@@ -42,6 +42,7 @@ const isFirstChildOfParent = computed(() => {
 const toggleNode = (e) => {
   if (hasChildren(props.nodeValue)) {
     e.stopPropagation();
+    selectNode();
     isExpanded.value = !isExpanded.value;
   }
 };

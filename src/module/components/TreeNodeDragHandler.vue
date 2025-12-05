@@ -36,6 +36,9 @@ const startDrag = (e) => {
   isDragging.value = true;
   e.dataTransfer.effectAllowed = 'move';
   e.dataTransfer.setData('sourcePath', props.path);
+  // Select the node being dragged
+  const pathArray = props.path.replace('root.', '').split('.');
+  treeStore.setSelectedPath(pathArray);
 };
 
 const dragEnd = () => {
