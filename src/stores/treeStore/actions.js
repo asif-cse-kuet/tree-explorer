@@ -343,6 +343,87 @@ export default {
     } catch {
       return false;
     }
+  },
+
+  addSiblingNode (path, newNodeKey) {
+    if (!this.jsonData || !path || path.length === 0 || !newNodeKey) {
+      this.error = 'Invalid path or node name';
+      return;
+    }
+
+    // Trim the new name
+    newNodeKey = newNodeKey.trim();
+    if (!newNodeKey) {
+      this.error = 'Node name cannot be empty';
+      return;
+    }
+
+    try {
+      // Navigate to the target node (which will become the parent)
+      let targetNode = this.jsonData;
+      const targetPath = path;
+      
+      for (let i = 0; i < targetPath.length; i++) {
+        if (typeof targetNode === 'object' && targetNode !== null && targetPath[i] in targetNode) {
+          targetNode = targetNode[targetPath[i]];
+        } else {
+          this.error = 'Target path not found';
+          return;
+        }
+      }
+
+      // Handle different value types
+      let newTargetValue;
+      const isEmptyOrNull = 
+        targetNode === '' || 
+        targetNode === null || 
+        targetNode === false ||
+        (typeof targetNode === 'object' && !Array.isArray(targetNode) && Object.keys(targetNode).length === 0);
+
+      if (isEmptyOrNull) {
+        // If empty/null, just convert to object with new child
+        newTargetValue = { [newNodeKey]: {} };
+      } else if (typeof targetNode === 'object' && !Array.isArray(targetNode)) {
+        // If it's already an object, add new child as first child
+        newTargetValue = { [newNodeKey]: {}, ...targetNode };
+      } else {
+        // If it has a primitive value, preserve it and add new child
+        newTargetValue = { [newNodeKey]: {}, old_value: targetNode };
+      }
+
+      // Navigate to parent and update
+      if (targetPath.length === 0) {
+        // Target is root, can't update
+        this.error = 'Cannot add child to root';
+        return;
+      }
+
+      let parent = this.jsonData;
+      const parentPath = targetPath.slice(0, -1);
+      
+      for (let i = 0; i < parentPath.length; i++) {
+        if (typeof parent === 'object' && parent !== null && parentPath[i] in parent) {
+          parent = parent[parentPath[i]];
+        } else {
+          this.error = 'Parent path not found';
+          return;
+        }
+      }
+
+      const targetKey = targetPath[targetPath.length - 1];
+      parent[targetKey] = newTargetValue;
+
+      // Force re-render
+      this.jsonData = JSON.parse(JSON.stringify(this.jsonData));
+
+      // Select the newly created child
+      const newChildPath = [...targetPath, newNodeKey];
+      this.selectedPath = newChildPath;
+
+    } catch (error) {
+      console.error('Add child operation failed:', error.message);
+      this.error = 'Failed to add child node';
+    }
   }
 }
 

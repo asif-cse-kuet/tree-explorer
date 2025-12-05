@@ -15,6 +15,9 @@ const handleTreeDelete = inject('handleTreeDelete');
 const isEditing = ref(false);
 const editingName = ref('');
 const editInput = ref(null);
+const isAddingSibling = ref(false);
+const addingSiblingName = ref('');
+const addSiblingInput = ref(null);
 
 const startEditing = async (e) => {
   e.stopPropagation();
@@ -51,6 +54,32 @@ const deleteNodeHandler = (e) => {
     });
   }
 };
+
+const startAddingSibling = async (e) => {
+  e.stopPropagation();
+  isAddingSibling.value = true;
+  addingSiblingName.value = '';
+  await nextTick();
+  addSiblingInput.value?.focus();
+};
+
+const finishAddingSibling = () => {
+  if (addingSiblingName.value.trim()) {
+    const pathArray = props.path.replace('root.', '').split('.');
+    treeStore.addSiblingNode(pathArray, addingSiblingName.value);
+  }
+  isAddingSibling.value = false;
+  addingSiblingName.value = '';
+};
+
+const cancelAddingSibling = (e) => {
+  if (e.key === 'Escape') {
+    isAddingSibling.value = false;
+    addingSiblingName.value = '';
+  } else if (e.key === 'Enter') {
+    finishAddingSibling();
+  }
+};
 </script>
 
 <template>
@@ -72,6 +101,33 @@ const deleteNodeHandler = (e) => {
     >
       {{ nodeKey }}
     </span>
+
+    <!-- Add sibling button - blue + without rounded border -->
+    <div class="add-sibling-container">
+      <button
+        @click="startAddingSibling"
+        class="add-sibling-btn"
+        title="Add sibling node after this one"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <line x1="12" y1="5" x2="12" y2="19" stroke-linecap="round" />
+          <line x1="5" y1="12" x2="19" y2="12" stroke-linecap="round" />
+        </svg>
+      </button>
+
+      <!-- Floating input for add sibling -->
+      <div v-if="isAddingSibling" class="floating-input-wrapper">
+        <input
+          v-model="addingSiblingName"
+          @blur="finishAddingSibling"
+          @keydown="cancelAddingSibling"
+          @click.stop
+          class="floating-input"
+          placeholder="New sibling key"
+          ref="addSiblingInput"
+        />
+      </div>
+    </div>
 
     <!-- Delete button - only for non-root nodes -->
     <button
@@ -115,6 +171,52 @@ const deleteNodeHandler = (e) => {
   font-weight: 400;
   outline: none;
   background: white;
+}
+
+.add-sibling-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.add-sibling-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  margin-left: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #3b82f6;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.add-sibling-btn:hover {
+  color: #2563eb;
+  transform: scale(1.15);
+}
+
+.floating-input-wrapper {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  z-index: 1000;
+  background: white;
+  border: 1px solid #3b82f6;
+  border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.floating-input {
+  padding: 4px 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 400;
+  outline: none;
+  background: transparent;
+  min-width: 150px;
 }
 
 .delete-btn {
