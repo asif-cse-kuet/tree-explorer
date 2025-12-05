@@ -62,19 +62,13 @@ const dragOver = (e) => {
   const height = rect.height;
   const percentY = relativeY / height;
   
-  // Define zones based on whether it's a container
-  if (isContainer.value) {
-    // Container: top 30% = before, bottom 30% = after, middle 40% = inside
-    if (percentY < 0.3) {
-      dropPosition.value = 'before';
-    } else if (percentY > 0.7) {
-      dropPosition.value = 'after';
-    } else {
-      dropPosition.value = 'inside';
-    }
+  // Define zones: always offer inside; containers and leaves share the same split
+  if (percentY < 0.3) {
+    dropPosition.value = 'before';
+  } else if (percentY > 0.7) {
+    dropPosition.value = 'after';
   } else {
-    // Non-container: just before/after based on midpoint
-    dropPosition.value = percentY < 0.5 ? 'before' : 'after';
+    dropPosition.value = 'inside';
   }
   
   isDragOver.value = true;

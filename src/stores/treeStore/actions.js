@@ -211,17 +211,32 @@ export default {
       const targetParentPath = targetPath.slice(0, -1);
       
       if (dropPosition === 'inside') {
-        // Add inside target node
+        // Add inside target node as FIRST child. If target isn't an object, promote it and preserve prior value.
         let targetNode = data;
         for (const key of targetPath) {
           targetNode = targetNode[key];
         }
         
         if (typeof targetNode !== 'object' || targetNode === null || Array.isArray(targetNode)) {
-          throw new Error('Cannot drop inside a non-container node');
+          // Promote primitive/array/null to an object and keep old value under __value
+          let parent = data;
+          for (let i = 0; i < targetPath.length - 1; i++) {
+            parent = parent[targetPath[i]];
+          }
+          const lastKey = targetPath[targetPath.length - 1];
+          const preserved = targetNode;
+          parent[lastKey] = { __value: preserved };
+          targetNode = parent[lastKey];
         }
         
-        targetNode[sourceKey] = sourceNode;
+        // Insert as first child by rebuilding object with new key first
+        const ordered = { [sourceKey]: sourceNode };
+        for (const k of Object.keys(targetNode)) {
+          ordered[k] = targetNode[k];
+        }
+        // Replace targetNode contents in place
+        for (const k in targetNode) delete targetNode[k];
+        Object.assign(targetNode, ordered);
         
         // Update selection
         if (JSON.stringify(this.selectedPath) === JSON.stringify(sourcePath)) {
