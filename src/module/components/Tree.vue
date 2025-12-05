@@ -1,15 +1,28 @@
 
 <script setup>
-import { ref } from 'vue';
+import { ref, provide } from 'vue';
 import { useTreeStore } from '../../stores';
 import TreeJsonInput from './TreeJsonInput.vue';
+import DeleteConfirmDialog from '../../global/DeleteConfirmDialog.vue';
 
 const treeStore = useTreeStore();
 const jsonInputRef = ref(null);
+const deleteDialog = ref(null);
 
 const openJsonInput = () => {
   jsonInputRef.value?.openDialog();
 };
+
+const handleTreeDeleteRequest = (deleteData) => {
+  deleteDialog.value?.openDialog(deleteData.nodeKey, (confirmed) => {
+    if (confirmed) {
+      treeStore.deleteNode(deleteData.path);
+    }
+  });
+};
+
+// Provide the delete handler to child TreeNode components
+provide('handleTreeDelete', handleTreeDeleteRequest);
 </script>
 
 <template>
@@ -40,6 +53,9 @@ const openJsonInput = () => {
     
     <!-- TreeJsonInput Dialog -->
     <TreeJsonInput ref="jsonInputRef" />
+    
+    <!-- DeleteConfirmDialog -->
+    <DeleteConfirmDialog ref="deleteDialog" />
   </div>
 </template>
 

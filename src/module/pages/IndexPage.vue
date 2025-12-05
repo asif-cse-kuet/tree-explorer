@@ -19,7 +19,12 @@ onMounted(() => {});
                 </template>
                 <template #tree="{ jsonData }">
                     <div v-for="(value, key) in jsonData" :key="key" class="tree__root">
-                        <TreeNode :nodeKey="String(key)" :nodeValue="value" :path="`root.${key}`" :level="0" />
+                        <TreeNode 
+                            :nodeKey="String(key)" 
+                            :nodeValue="value" 
+                            :path="`root.${key}`" 
+                            :level="0"
+                        />
                     </div>
                 </template>
             </Tree>

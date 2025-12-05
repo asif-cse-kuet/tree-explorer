@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick, inject } from 'vue';
 import { useTreeStore } from '../../stores';
 
 const treeStore = useTreeStore();
+const handleTreeDelete = inject('handleTreeDelete');
 
 const props = defineProps({
   nodeKey: {
@@ -23,7 +24,12 @@ const props = defineProps({
   }
 });
 
+const emit = defineEmits(['tree-delete-request']);
+
 const isExpanded = ref(true);
+const isEditing = ref(false);
+const editingName = ref('');
+const editInput = ref(null);
 
 // Convert path string to array for comparison
 const pathArray = computed(() => {
@@ -47,6 +53,40 @@ const selectNode = () => {
   treeStore.setSelectedPath(pathArray.value);
 };
 
+const startEditing = async (e) => {
+  e.stopPropagation();
+  isEditing.value = true;
+  editingName.value = props.nodeKey;
+  await nextTick();
+  editInput.value?.focus();
+  editInput.value?.select();
+};
+
+const finishEditing = () => {
+  if (editingName.value.trim() && editingName.value !== props.nodeKey) {
+    treeStore.renameNode(pathArray.value, editingName.value);
+  }
+  isEditing.value = false;
+};
+
+const cancelEditing = (e) => {
+  if (e.key === 'Escape') {
+    isEditing.value = false;
+  } else if (e.key === 'Enter') {
+    finishEditing();
+  }
+};
+
+const deleteNodeHandler = (e) => {
+  e.stopPropagation();
+  if (props.level > 0 && handleTreeDelete) {
+    handleTreeDelete({
+      nodeKey: props.nodeKey,
+      path: pathArray.value
+    });
+  }
+};
+
 const isObject = (value) => {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 };
@@ -59,7 +99,7 @@ const hasChildren = (value) => {
 <template>
   <div class="tree__node" :class="{ 'tree__node--root': level === 0 }" :style="{ paddingLeft: level > 0 ? '35px' : '0' }">
     <div 
-      class="node-header" 
+      class="node-header group" 
       :class="{ 'node-header--selected': isSelected }"
       @click="selectNode"
     >
@@ -81,17 +121,44 @@ const hasChildren = (value) => {
       <!-- Spacer for leaf nodes -->
       <span v-else class="toggle-spacer"></span>
       
-      <!-- Node label -->
-      <span class="node-label" :class="{ 'cursor-pointer': hasChildren(nodeValue) }">
+      <!-- Node label - Editable -->
+      <input 
+        v-if="isEditing"
+        v-model="editingName"
+        @blur="finishEditing"
+        @keydown="cancelEditing"
+        @click.stop
+        class="node-input"
+        ref="editInput"
+      />
+      <span 
+        v-else
+        class="node-label" 
+        :class="{ 'cursor-pointer': hasChildren(nodeValue) }"
+        @dblclick="startEditing"
+      >
         {{ nodeKey }}
       </span>
+
+      <!-- Delete button - only for non-root nodes -->
+      <button
+        v-if="level > 0"
+        @click="deleteNodeHandler"
+        class="delete-btn"
+        title="Delete node"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="8" y1="12" x2="16" y2="12" stroke="white" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
     </div>
 
     <!-- Children nodes -->
     <div v-if="hasChildren(nodeValue) && isExpanded" class="tree__children">
       <TreeNode 
         v-for="(childValue, childKey) in nodeValue" 
-        :key="childKey"
+        :key="`${path}.${childKey}`"
         :nodeKey="String(childKey)" 
         :nodeValue="childValue" 
         :path="`${path}.${childKey}`"
@@ -187,6 +254,7 @@ const hasChildren = (value) => {
 
 .node-label {
   font-weight: 400;
+  flex: 1;
 }
 
 .node-label.cursor-pointer {
@@ -195,6 +263,35 @@ const hasChildren = (value) => {
 
 .node-label:hover {
   color: #1f2937;
+}
+
+.node-input {
+  flex: 1;
+  padding: 2px 4px;
+  border: 1px solid #3b82f6;
+  border-radius: 3px;
+  font-size: 14px;
+  font-weight: 400;
+  outline: none;
+  background: white;
+}
+
+.delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  margin-left: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #ef4444;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.delete-btn:hover {
+  color: #dc2626;
+  transform: scale(1.1);
 }
 
 .tree__children {
