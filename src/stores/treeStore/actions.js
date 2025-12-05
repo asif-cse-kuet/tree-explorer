@@ -218,14 +218,14 @@ export default {
         }
         
         if (typeof targetNode !== 'object' || targetNode === null || Array.isArray(targetNode)) {
-          // Promote primitive/array/null to an object and keep old value under __value
+          // Promote primitive/array/null to an object and keep old value under old_value
           let parent = data;
           for (let i = 0; i < targetPath.length - 1; i++) {
             parent = parent[targetPath[i]];
           }
           const lastKey = targetPath[targetPath.length - 1];
           const preserved = targetNode;
-          parent[lastKey] = { __value: preserved };
+          parent[lastKey] = { old_value: preserved };
           targetNode = parent[lastKey];
         }
         
