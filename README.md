@@ -258,26 +258,73 @@ my-app/
 # Clone the repository
 git clone <repository-url>
 cd my-app
-
 # Install dependencies
 npm install
 ```
 
-### Development Server
+### Getting Started - Choose Your Path
+
+After cloning and installing, you have **two options** to run the application:
+
+---
+
+## 🚀 Option A: Traditional NPM (Without Docker)
+
+**Best for:** Local development, learning, quick setup
 
 ```bash
 # Start development server with HMR
 npm run dev
 ```
 
-The application will be available at `http://localhost:5173` (default Vite port).
+**Access:** `http://localhost:5173`
 
-**Development Features:**
+**Features:**
 
-- Hot Module Replacement (instant updates)
-- Source maps for debugging
-- Vue DevTools integration
-- Pinia DevTools integration
+- ✅ Hot Module Replacement (instant updates)
+- ✅ Source maps for debugging
+- ✅ Vue DevTools integration
+- ✅ Pinia DevTools integration
+
+**Requirements:**
+
+- Node.js v18+ installed locally
+- No Docker needed
+
+---
+
+## 🐳 Option B: Docker (Containerized)
+
+**Best for:** Production deployment, consistent environments, team collaboration
+
+**Prerequisites:**
+
+- Docker Desktop installed and running (see [Install Docker Desktop](#install-docker-desktop) section)
+
+**Development with Docker:**
+
+```bash
+docker-compose -f docker-compose.dev.yml up
+```
+
+**Access:** `http://localhost:5173` (with HMR support)
+
+**Production with Docker:**
+
+```bash
+docker-compose up -d
+```
+
+Access at: `http://localhost:8080`
+
+**Benefits:**
+
+- ✅ Containerized environment
+- ✅ Production-ready configuration
+- ✅ Same environment on all machines
+- ✅ Easy deployment to cloud services
+
+---
 
 ### Environment Setup
 
@@ -299,8 +346,135 @@ The application includes production-grade Docker configuration with:
 
 ### Prerequisites
 
+**Required:**
+
 - **Docker**: v20.10+
 - **Docker Compose**: v2.0+ (included with Docker Desktop)
+- **Docker Daemon**: Must be running before executing docker commands
+
+#### Important: Docker Daemon Must Be Running
+
+Before running any Docker commands, ensure Docker Desktop (or Docker daemon) is actively running on your machine. Without it, all Docker commands will fail.
+
+**Common Error (Docker not running):**
+
+```
+error during connect: Get "http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine": The system cannot find the file specified.
+```
+
+### Install Docker Desktop
+
+Follow the official Docker installation guide for your operating system:
+
+#### Windows
+
+1. **Download Docker Desktop for Windows:**
+
+   - Go to: https://docs.docker.com/desktop/setup/install/windows-install/
+   - Download the installer for your processor:
+     - Intel/AMD: Docker Desktop Installer.exe
+     - ARM64: Docker Desktop Installer (ARM).exe
+
+2. **Install Docker Desktop:**
+
+   - Run the installer
+   - Follow the installation wizard
+   - Choose "Install required Windows components for WSL 2" (recommended)
+   - Restart your computer when prompted
+
+3. **Start Docker Desktop:**
+
+   - Search "Docker Desktop" in Windows Start Menu
+   - Click to launch
+   - Wait for the status indicator to show "Docker is running" (green icon in system tray)
+
+4. **Verify Installation:**
+   ```powershell
+   docker --version
+   docker run hello-world
+   ```
+
+**Documentation:** https://docs.docker.com/desktop/setup/install/windows-install/
+
+#### macOS
+
+1. **Download Docker Desktop for Mac:**
+
+   - Go to: https://docs.docker.com/desktop/setup/install/mac-install/
+   - Choose your processor:
+     - Apple Silicon (M1/M2/M3/M4): ARM64 version
+     - Intel: Intel Chip version
+
+2. **Install Docker Desktop:**
+
+   - Open the downloaded `.dmg` file
+   - Drag Docker.app to Applications folder
+   - Open Applications → Docker.app
+   - Enter your Mac password when prompted
+
+3. **Start Docker Desktop:**
+
+   - Click Docker icon in menu bar (top-right)
+   - Wait for "Docker is running" message
+
+4. **Verify Installation:**
+   ```bash
+   docker --version
+   docker run hello-world
+   ```
+
+**Documentation:** https://docs.docker.com/desktop/setup/install/mac-install/
+
+#### Linux
+
+1. **Install Docker Engine (Official Method):**
+
+   - Go to: https://docs.docker.com/engine/install/
+   - Choose your Linux distribution:
+     - Ubuntu/Debian
+     - CentOS/RHEL
+     - Fedora
+     - Arch
+
+   **Ubuntu/Debian Example:**
+
+   ```bash
+   # Add Docker's official GPG key
+   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+   # Add Docker repository
+   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+   # Install Docker
+   sudo apt-get update
+   sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+   ```
+
+2. **Start Docker Service:**
+
+   ```bash
+   # Start Docker daemon
+   sudo systemctl start docker
+
+   # Enable Docker to start on boot
+   sudo systemctl enable docker
+   ```
+
+3. **Run without sudo (Optional):**
+
+   ```bash
+   # Add current user to docker group
+   sudo usermod -aG docker $USER
+   newgrp docker
+   ```
+
+4. **Verify Installation:**
+   ```bash
+   docker --version
+   docker run hello-world
+   ```
+
+**Documentation:** https://docs.docker.com/engine/install/
 
 ### Production Deployment
 
