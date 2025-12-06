@@ -3,6 +3,7 @@
 import { onMounted } from 'vue';
 import Layout from '../components/Layout.vue';
 import Breadcrumb from '../../global/Breadcrumb.vue';
+import UndoButton from '../../global/UndoButton.vue';
 import Json from '../components/Json.vue';
 import Tree from '../components/Tree.vue';
 import TreeNode from '../components/TreeNode.vue';
@@ -15,7 +16,10 @@ onMounted(() => {});
         <Layout>
             <Tree>
                 <template #breadcrumb>
-                    <Breadcrumb :path="['Tree']"/>
+                    <div class="flex items-center justify-between gap-4">
+                        <Breadcrumb :path="['Tree']"/>
+                        <UndoButton />
+                    </div>
                 </template>
                 <template #tree="{ jsonData }">
                     <div v-for="(value, key) in jsonData" :key="key" class="tree__root">

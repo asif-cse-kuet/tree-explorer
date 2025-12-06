@@ -123,7 +123,7 @@ const cancelAddingSibling = (e) => {
           @keydown="cancelAddingSibling"
           @click.stop
           class="floating-input"
-          placeholder="New sibling key"
+          placeholder="New child key"
           ref="addSiblingInput"
         />
       </div>

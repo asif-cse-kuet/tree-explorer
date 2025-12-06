@@ -3,6 +3,7 @@ export default {
     try {
       this.isLoading = true;
       this.error = '';
+      this.history = []; // Clear history on new data load
 
       // Trim input
       let trimmedInput = jsonInput.trim();
@@ -78,6 +79,9 @@ export default {
       return;
     }
 
+    // Push history before making changes
+    this.pushHistory();
+
     // Navigate to parent
     let current = this.jsonData;
     for (let i = 0; i < path.length - 1; i++) {
@@ -114,6 +118,9 @@ export default {
     
     // If renaming root node
     if (path.length === 1) {
+      // Push history BEFORE making changes
+      this.pushHistory();
+      
       const value = this.jsonData[oldName];
       const newData = {};
       
@@ -151,6 +158,9 @@ export default {
       return;
     }
 
+    // Push history BEFORE making changes
+    this.pushHistory();
+
     // Rename the node - preserve order by rebuilding object
     if (typeof current === 'object' && current !== null && oldName in current) {
       const value = current[oldName];
@@ -172,6 +182,9 @@ export default {
       for (const key in newObj) {
         current[key] = newObj[key];
       }
+      
+      // Force reactivity by reassigning jsonData
+      this.jsonData = JSON.parse(JSON.stringify(this.jsonData));
       
       // Update selected path if this node was selected
       if (JSON.stringify(this.selectedPath) === JSON.stringify(path)) {
@@ -326,7 +339,6 @@ export default {
     try {
       // Navigate to where the node should be
       let checkParent = data;
-      
       if (dropPosition === 'inside') {
         // Should be inside target
         for (const key of targetPath) {
@@ -350,19 +362,18 @@ export default {
       this.error = 'Invalid path or node name';
       return;
     }
-
     // Trim the new name
     newNodeKey = newNodeKey.trim();
     if (!newNodeKey) {
       this.error = 'Node name cannot be empty';
       return;
     }
-
+    // Push history before making changes
+    this.pushHistory();
     try {
       // Navigate to the target node (which will become the parent)
       let targetNode = this.jsonData;
       const targetPath = path;
-      
       for (let i = 0; i < targetPath.length; i++) {
         if (typeof targetNode === 'object' && targetNode !== null && targetPath[i] in targetNode) {
           targetNode = targetNode[targetPath[i]];
@@ -371,7 +382,6 @@ export default {
           return;
         }
       }
-
       // Handle different value types
       let newTargetValue;
       const isEmptyOrNull = 
@@ -397,10 +407,8 @@ export default {
         this.error = 'Cannot add child to root';
         return;
       }
-
       let parent = this.jsonData;
       const parentPath = targetPath.slice(0, -1);
-      
       for (let i = 0; i < parentPath.length; i++) {
         if (typeof parent === 'object' && parent !== null && parentPath[i] in parent) {
           parent = parent[parentPath[i]];
@@ -409,20 +417,41 @@ export default {
           return;
         }
       }
-
       const targetKey = targetPath[targetPath.length - 1];
       parent[targetKey] = newTargetValue;
-
       // Force re-render
       this.jsonData = JSON.parse(JSON.stringify(this.jsonData));
-
       // Select the newly created child
       const newChildPath = [...targetPath, newNodeKey];
       this.selectedPath = newChildPath;
-
     } catch (error) {
       console.error('Add child operation failed:', error.message);
       this.error = 'Failed to add child node';
+    }
+  },
+
+  pushHistory () {
+    const MAX_HISTORY = 1;
+    this.history = [];
+    // Push deep copy of current state
+    this.history.push({
+      jsonData: JSON.parse(JSON.stringify(this.jsonData)),
+      selectedPath: [...this.selectedPath],
+    });
+  },
+  undoLastAction () {
+    if (this.history.length === 0) {
+      this.error = 'Nothing to undo';
+      return;
+    }
+    try {
+      const previousState = this.history.pop();
+      this.jsonData = previousState.jsonData;
+      this.selectedPath = previousState.selectedPath;
+      this.error = '';
+    } catch (error) {
+      console.error('Undo operation failed:', error.message);
+      this.error = 'Failed to undo';
     }
   }
 }
