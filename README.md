@@ -17,7 +17,7 @@ A production-grade interactive JSON tree visualization and manipulation applicat
 
 ---
 
-## 🎯 Overview
+# 🎯 Overview
 
 This application provides a powerful interface for visualizing, editing, and manipulating JSON data structures in a hierarchical tree format. It combines intuitive UI/UX with advanced features like drag-and-drop repositioning, real-time editing, and undo functionality.
 
@@ -57,18 +57,32 @@ This project leverages **Vue 3** with the **Composition API** for several strate
 
 ---
 
-## ✨ Features
+## ✨ Features Implemented
 
-### Core Features
+This project implements a **VSCode Explorer-style collapsible tree component** with comprehensive JSON manipulation capabilities. The application is divided into two main sections:
 
-#### 1. **JSON Import & Visualization**
+### **Left Panel: Tree Explorer**
 
-- Import JSON via intuitive dialog
-- Automatic validation and error handling
-- Hierarchical tree rendering with expand/collapse
+A fully interactive tree view for navigating and manipulating JSON object hierarchies.
+
+### **Right Panel: Main Viewport**
+
+Displays real-time breadcrumb navigation and formatted JSON representation of the current data structure.
+
+---
+
+## Required Features (Must-Have) ✅
+
+### 1. **JSON Import System**
+
+- **Import Button**: Opens a modal dialog for JSON input
+- **User Input**: Accepts raw JSON text from users
+- **Validation**: Automatic JSON validation with error feedback
+- **Tree Rendering**: Converts valid JSON into an expandable/collapsible tree structure
+- **Proper Nesting**: Maintains object hierarchy with visual indentation
 
 ```json
-// Example: Importing nested structure
+// Example: Import this structure
 {
   "users": {
     "admin": {
@@ -77,18 +91,195 @@ This project leverages **Vue 3** with the **Composition API** for several strate
     }
   }
 }
+```
 
-#### 2. **Drag-and-Drop Repositioning**
+### 2. **Tree Navigation & Interaction**
 
-- Move nodes anywhere in the tree
-- Three drop modes:
-  - **Before**: Insert as previous sibling
-  - **After**: Insert as next sibling
-  - **Inside**: Insert as first child
-- Visual indicators (blue lines, green outline, orange parent boundary)
-- Smart blocking (prevents invalid operations like root-level siblings)
+- **Node Labels**: Each node displays the key name from the object
+- **Expandable Nodes**: Nodes with children show a caret/arrow icon
+- **Toggle Behavior**: Click caret to expand/collapse child nodes
+- **Node Selection**: Click any node to highlight and select it
+- **Breadcrumb Display**: Shows exact location in tree hierarchy (e.g., `Tree > users > admin`)
 
-Example (longer tree):
+### 3. **Delete Functionality**
+
+- **Delete Button**: Red **-** icon appears on each node
+- **Child Deletion**: Delete any node that is a child of another node
+- **Confirmation Modal**: Shows confirmation dialog before deleting
+- **Root Protection**: Root node cannot be deleted (safety constraint)
+- **Parent Selection**: After deletion, parent node is auto-selected
+- **Real-time Update**: Main viewport JSON updates immediately after deletion
+
+### 4. **Data Persistence**
+
+- **LocalStorage**: All tree modifications are persisted locally
+- **Page Refresh**: Tree state survives browser refresh
+- **Automatic Sync**: Changes are saved automatically on every operation
+
+### 5. **Main Viewport Features**
+
+- **Breadcrumb Navigation**: Real-time path display showing selected node location
+- **JSON Display**: Read-only formatted JSON representation
+- **Live Updates**: Object structure updates instantly on any tree modification
+- **Synchronized State**: Left tree and right JSON are always in sync
+
+---
+
+## Bonus Features (Nice-to-Have) ✅
+
+### 1. **Add Node Functionality** ✅
+
+- **Add Button**: Blue **+** icon on each node
+- **Floating Input**: Quick inline input for new node names
+- **Root Addition**: Can add nodes to root level
+- **Child Addition**: New nodes become first child of selected parent
+- **Empty Value Handling**: Empty names preserved as `old_value`
+
+**Edge Cases & Examples:**
+
+```json
+// Original tree
+{
+  "users": {
+    "admin": "John",
+    "max_usr":50,
+    "general":""
+  }
+}
+
+// Case 1: Add to key that's value is empty
+// Click + on "general" → Enter "guest"
+{
+  "users": {     // New node with empty value
+    "admin": "John",
+    "max_usr":50,
+    "general": {
+      "guest":""
+    }
+  }
+}
+
+// Case 2: Add to a node that has value
+// Click + on "max_usr" → Enter channel
+{
+  "users": {
+    "admin": "John",
+    "max_usr":{
+      "channel": "",
+      "old_value": 50,  // Fallback for old value
+    },
+    "general": {
+      "guest":""
+    }
+  }
+}
+
+// Case 3: Add to deeply nested object
+// Works at any depth level
+{
+  "level1": {
+    "level2": {
+      "level3": {
+        "newNode": ""  // Added at any nesting level
+      }
+    }
+  }
+}
+```
+
+**Behavior Notes:**
+
+- New nodes always appear as **first child** (inserted at top)
+- Adding to a primitive value converts it to an object
+- Original value preserved as `old_value` key
+- Focus automatically moves to input field when + is clicked
+
+### 2. **Rename Node Functionality** ✅
+
+- **Double-click to Edit**: Double-click any node label to rename
+- **Inline Editing**: Edit directly in the tree without modal
+- **Keyboard Shortcuts**:
+  - **Enter**: Confirm rename
+  - **Escape**: Cancel rename
+- **Key Order Preservation**: Maintains object key order after rename
+
+### 3. **Undo Last Action** ✅
+
+- **Undo Button**: Curved arrow icon in breadcrumb area
+- **Supported Actions**: Undo add, delete, and rename operations
+- **Single-level Undo**: Restores last action only (1 history item)
+- **Visual State**: Button disabled when no history available
+- **Instant Rollback**: Changes revert immediately on click
+
+**Action Flow Example:**
+
+```
+1. Rename "foo" → "bar"
+2. Click undo button
+3. Restores "foo" instantly
+```
+
+**Note:** Drag-drop operations are NOT undoable by design (Not asked on the task).
+
+### 4. **Drag-and-Drop Re-parenting** ✅
+
+- **Full Drag Support**: Move nodes anywhere in the tree
+- **Three Drop Modes**:
+  - **Before**: Insert as previous sibling (blue line indicator)
+  - **After**: Insert as next sibling (blue line indicator)
+  - **Inside**: Insert as first child (green outline)
+- **Visual Cues**:
+  - **Blue horizontal line**: Appears BEFORE or AFTER target node for sibling placement
+  - **Green highlight**: Target node lights up when dropping INSIDE as child
+  - **Orange boundary**: Indicates parent's bottom and it's first child's top container edge during drag, adds the new node as first child of the parent.
+- **Smart Constraints**: Prevents invalid operations (e.g., dragging parent into its own child)
+
+**Example:**
+
+```
+Initial Tree:
+[Root]
+  ├─ [foo]
+  │    ├─ [bar]
+  │    └─ [baz]
+  └─ [hello]
+       ├─ [world]
+       │    ├─ [nested]
+       │    └─ [deep]
+       └─ [test]
+
+***Scenario 1: Drag [baz] and drop on [hello]
+- Drop zone: Top 30% (BEFORE) → Blue line appears ABOVE [hello]
+  Result: [baz] becomes sibling BEFORE [hello]
+
+- Drop zone: Middle 40% (INSIDE) → [hello] turns GREEN
+  Result: [baz] becomes first child of [hello]
+
+- Drop zone: Bottom 30% (AFTER) → Blue line appears BELOW [hello]
+  Result: [baz] becomes sibling AFTER [hello]
+
+***Scenario 2: Drag [test] and drop on [nested]
+- Drop INSIDE (green) → [test] moves inside [nested] as first child
+
+***Scenario 3: Drag [deep] and drop on [bar]
+- Drop BEFORE (orange line above as this is in between first child and parent) → [deep] becomes previous sibling of [bar]
+- Drop AFTER (blue line below) → [deep] becomes next sibling of [bar]
+
+Tree (after dropping [baz] INSIDE [hello]):
+[Root]
+  ├─ [foo]
+  │    └─ [bar]
+  └─ [hello]
+       ├─ [baz]       ← Moved here
+       ├─ [world]
+       │    ├─ [nested]
+       │    └─ [deep]
+       └─ [test]
+```
+
+#Few more examples:
+
+```
 [Root]
   ├─ [Node A]
   │    ├─ [Node A1]
@@ -137,47 +328,38 @@ Drag [Node C] to [Node A]:
     │    └─ [Node A2]
     └─ [Node B]
          └─ [Node B1]
+```
 
-#### 3. **CRUD Operations**
+**Visual Drop Zones:**
 
-**Create**:
-- Blue **+** icon: Add child node (becomes first child)
-- Floating input for quick node naming
-- Handles edge cases: empty values preserved as `old_value`
+```
+┌────────────────────────────────┐
+│ ← 30% BEFORE (blue in general) │
+│ (orange if the node is the     │  Top third: Insert as previous sibling
+│ first child of a parent)       │
+├────────────────────────────────┤
+│ ← 40% INSIDE (green)           │  Middle: Insert as first child
+├────────────────────────────────┤
+│ ← 30% AFTER (blue)             │  Bottom third: Insert as next sibling
+└────────────────────────────────┘
+```
 
-**Read**:
-- Expandable tree view
-- Breadcrumb navigation
-- Selection highlighting (full-width even on overflow)
+### 5. **Formatted JSON Display** ✅
 
-**Update/Edit**:
-- Double-click node labels for inline rename
-- Keyboard shortcuts: Enter (confirm), Escape (cancel)
-- Preserves key order during rename
+- **Pretty Print**: JSON displayed with proper indentation
+- **Syntax Highlighting**: Object structure clearly visible
+- **Real-time Sync**: Updates immediately on tree modifications
+- **Read-only View**: Main viewport JSON is for display only
 
-**Delete**:
-- Red **-** icon with confirmation dialog
-- Prevents accidental root deletion
-- Auto-selects parent after deletion
+---
 
-#### 4. **Undo Functionality**
-- Undo last add/delete/rename action
-- Undo (last action only)
-- Curved arrow icon in breadcrumb area
-- Disabled state when no history available
-- **Note**: Drag-drop operations are NOT undoable (by design)
-Action Flow:
-1. Rename "foo" → "bar"
-2. Click undo button
-3. Restores "foo" instantly
+## Additional UI/UX Enhancements
 
-#### 5. **Advanced UI/UX**
-
-- **Responsive Design**: Works on mobile, tablet, desktop
-- **Horizontal Scrolling**: Handles deeply nested structures (1024px+ screens)
-- **Selection on Interaction**: Click toggler or drag = auto-select
-- **Empty Object Handling**: Allows drops on empty containers
-- **Value Preservation**: Primitives converted to objects with `old_value` key
+- **Responsive Design**: Works on mobile, tablet, and desktop
+- **Horizontal Scrolling**: Handles deeply nested structures on any screen size
+- **Selection on Interaction**: Clicking toggle or dragging auto-selects nodes
+- **Empty Object Handling**: Can drop nodes into empty containers
+- **Full-width Selection**: Selection highlight spans entire row even with overflow
 
 ---
 
@@ -204,55 +386,57 @@ Action Flow:
 ---
 
 ## 📁 Project Structure
+
 my-app/
-├── public/                    # Static assets
+├── public/ # Static assets
 ├── src/
-│   ├── assets/               # Styles and global assets
-│   │   └── main.css          # Tailwind imports & global styles
-│   │
-│   ├── global/               # Shared global components
-│   │   ├── Breadcrumb.vue    # Path navigation component
-│   │   ├── DeleteConfirmDialog.vue  # Reusable confirmation modal
-│   │   └── UndoButton.vue    # Undo last action button
-│   │
-│   ├── module/               # Feature modules
-│   │   ├── components/       # Feature-specific components
-│   │   │   ├── Json.vue      # JSON display panel (right side)
-│   │   │   ├── JsonInput.vue # JSON import dialog
-│   │   │   ├── Layout.vue    # Two-column layout wrapper
-│   │   │   ├── Tree.vue      # Tree container with scroll handling
-│   │   │   ├── TreeNode.vue  # Recursive tree node (core component)
-│   │   │   ├── TreeNodeContent.vue  # Node label, edit, buttons
-│   │   │   ├── TreeNodeDragHandler.vue  # Drag-drop logic & indicators
-│   │   │   └── TreeJsonInput.vue  # JSON input with validation
-│   │   │
-│   │   └── pages/            # Page-level components
-│   │       └── IndexPage.vue # Main application page
-│   │
-│   ├── stores/               # Pinia state management
-│   │   ├── index.js          # Export all stores
-│   │   └── treeStore/        # Tree state module
-│   │       ├── index.js      # Store definition, getters, persist config
-│   │       └── actions.js    # All state mutations (CRUD, drag-drop, undo)
-│   │
-│   ├── App.vue               # Root component
-│   └── main.js               # Application entry point
+│ ├── assets/ # Styles and global assets
+│ │ └── main.css # Tailwind imports & global styles
+│ │
+│ ├── global/ # Shared global components
+│ │ ├── Breadcrumb.vue # Path navigation component
+│ │ ├── DeleteConfirmDialog.vue # Reusable confirmation modal
+│ │ └── UndoButton.vue # Undo last action button
+│ │
+│ ├── module/ # Feature modules
+│ │ ├── components/ # Feature-specific components
+│ │ │ ├── Json.vue # JSON display panel (right side)
+│ │ │ ├── JsonInput.vue # JSON import dialog
+│ │ │ ├── Layout.vue # Two-column layout wrapper
+│ │ │ ├── Tree.vue # Tree container with scroll handling
+│ │ │ ├── TreeNode.vue # Recursive tree node (core component)
+│ │ │ ├── TreeNodeContent.vue # Node label, edit, buttons
+│ │ │ ├── TreeNodeDragHandler.vue # Drag-drop logic & indicators
+│ │ │ └── TreeJsonInput.vue # JSON input with validation
+│ │ │
+│ │ └── pages/ # Page-level components
+│ │ └── IndexPage.vue # Main application page
+│ │
+│ ├── stores/ # Pinia state management
+│ │ ├── index.js # Export all stores
+│ │ └── treeStore/ # Tree state module
+│ │ ├── index.js # Store definition, getters, persist config
+│ │ └── actions.js # All state mutations (CRUD, drag-drop, undo)
+│ │
+│ ├── App.vue # Root component
+│ └── main.js # Application entry point
 │
-├── index.html                # HTML entry point
-├── Dockerfile                # Production multi-stage build
-├── Dockerfile.dev            # Development image with HMR
-├── docker-compose.yml        # Production orchestration
-├── docker-compose.dev.yml    # Development orchestration
-├── nginx.conf                # Nginx configuration
-├── .dockerignore             # Docker build context ignores
-├── .env.example              # Environment variable template
-├── jsconfig.json             # JavaScript configuration
-├── package.json              # Dependencies and scripts
-├── package-lock.json         # Locked dependency tree
-├── vite.config.js            # Vite build configuration
-├── tailwind.config.js        # Tailwind CSS configuration
-└── README.md                 # This file
-```
+├── index.html # HTML entry point
+├── Dockerfile # Production multi-stage build
+├── Dockerfile.dev # Development image with HMR
+├── docker-compose.yml # Production orchestration
+├── docker-compose.dev.yml # Development orchestration
+├── nginx.conf # Nginx configuration
+├── .dockerignore # Docker build context ignores
+├── .env.example # Environment variable template
+├── jsconfig.json # JavaScript configuration
+├── package.json # Dependencies and scripts
+├── package-lock.json # Locked dependency tree
+├── vite.config.js # Vite build configuration
+├── tailwind.config.js # Tailwind CSS configuration
+└── README.md # This file
+
+````
 
 ### Key File Purposes
 
@@ -299,7 +483,7 @@ git clone <repository-url>
 cd my-app
 # Install dependencies
 npm install
-```
+````
 
 ### Getting Started - Choose Your Path
 
@@ -373,7 +557,7 @@ No environment variables required for basic usage. The application uses browser 
 
 ## 🐳 Docker Setup
 
-### Overview
+### Overview Docker
 
 The application includes production-grade Docker configuration with:
 
