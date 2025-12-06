@@ -12,13 +12,15 @@ onMounted(() => {});
 </script>
 
 <template>
-    <div class="flex justify-center items-center min-h-screen bg-gray-50 px-4 py-8">
+    <div class="w-full flex flex-col justify-center items-center min-h-screen bg-gray-50 px-4 py-8">
         <Layout>
             <Tree>
                 <template #breadcrumb>
                     <div class="flex items-center justify-between gap-4">
                         <Breadcrumb :path="['Tree']"/>
-                        <UndoButton />
+                        <div class="h-20 content-end">
+                            <UndoButton />
+                        </div>
                     </div>
                 </template>
                 <template #tree="{ jsonData }">

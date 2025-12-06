@@ -13,7 +13,7 @@ onMounted(() => {});
 </script>
 
 <template>
-  <div class="flex flex-wrap items-center gap-1 text-sm">
+  <div class="h-20 flex flex-wrap content-end gap-1 text-sm">
     <template v-for="(item, index) in path" :key="index">
       <span 
         class="px-1 py-1 rounded text-black font-semibold hover:bg-gray-300 cursor-pointer text-xl transition-colors whitespace-nowrap"
@@ -22,11 +22,11 @@ onMounted(() => {});
       </span>
       <svg 
         v-if="index < path.length - 1"
-        viewBox="0 0 24 24" 
+        viewBox="0 -4 24 24" 
         fill="none"
         stroke="currentColor" 
         stroke-width="4"
-        class="w-4 h-4 flex-shrink-0"
+        class="w-4"
       >
         <path  
           stroke-linecap="round" 

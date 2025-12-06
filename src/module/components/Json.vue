@@ -37,12 +37,12 @@ const formatJson = (obj) => {
 </script>
 
 <template>
-  <div class="flex flex-col w-full sm:w-96 lg:w-[480px] xl:w-[600px]">
+  <div class="flex flex-col w-full sm:w-96 lg:w-[450px] xl:w-[450px]">
     <div class="flex flex-wrap ">
       <slot :breadcrumbPath="breadcrumbPath"></slot>
     </div>
     
-    <div class="bg-white border border-gray-300 rounded p-4 flex flex-col w-full sm:w-96 lg:w-[380px] xl:w-[400px]">
+    <div class="bg-white border border-gray-300 rounded p-4 flex flex-col w-full sm:w-96 lg:w-[450px] xl:w-[450px]">
       <!-- JSON Display with scrollbar -->
       <div class="min-h-[220px] max-h-102 overflow-y-auto p-3 font-mono text-normal text-gray-800 whitespace-pre-wrap wrap-break-words scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
         {{ formatJson(treeStore.jsonData) }}

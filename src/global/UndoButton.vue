@@ -46,6 +46,7 @@ const handleUndo = () => {
   background: transparent;
   border: 1px solid #d1d5db;
   border-radius: 4px;
+  margin-bottom: 2px;
   cursor: pointer;
   color: #6b7280;
   transition: all 0.2s ease;

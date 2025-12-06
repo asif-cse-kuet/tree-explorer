@@ -28,7 +28,7 @@ provide('handleTreeDelete', handleTreeDeleteRequest);
 <template>
   <div>
     <slot name="breadcrumb"></slot>
-    <div class="bg-white border border-gray-300 rounded p-4 flex flex-col h-110 w-full sm:w-96 lg:w-[280px] xl:w-[400px]">
+    <div class="bg-white border border-gray-300 rounded p-4 flex flex-col h-110 w-full sm:w-96 lg:w-[350px] xl:w-[400px]">
       <!-- Show import button when no data -->
       <div v-if="!treeStore.hasData" class="flex-1 flex items-center justify-center">
         <button
