@@ -36,15 +36,15 @@ This project leverages **Vue 3** with the **Composition API** for several strate
 
 ### Vue.js Advantages Over React
 
-| Aspect                   | Vue.js                         | React                                      |
-| ------------------------ | ------------------------------ | ------------------------------------------ |
-| **Learning Curve**       | Gentler, HTML-like templates   | Steeper, JSX requires JavaScript knowledge |
-| **Bundle Size**          | ~34KB (smaller)                | ~40KB+ (larger with dependencies)          |
-| **Performance**          | Fine-grained reactivity system | Virtual DOM diffing                        |
-| **State Management**     | Pinia (official, integrated)   | Redux/Zustand (third-party)                |
-| **Build Tool**           | Vite (built-in, blazing fast)  | CRA/Vite (requires configuration)          |
-| **Two-Way Binding**      | Native `v-model`               | Manual controlled components               |
-| **Developer Experience** | Single File Components (.vue)  | JSX split across files                     |
+| Aspect                   | Vue.js                                                    | React                                                             |
+| ------------------------ | --------------------------------------------------------- | ----------------------------------------------------------------- |
+| **Learning Curve**       | Gentler, HTML-like templates                              | Steeper, JSX requires JavaScript knowledge                        |
+| **Bundle Size**          | Vue core runtime is smaller; actual bundle depends on app | React + ReactDOM baseline is larger; actual bundle depends on app |
+| **Performance**          | Fine-grained reactivity system                            | Virtual DOM diffing                                               |
+| **State Management**     | Pinia (official, integrated)                              | Redux/Zustand (third-party)                                       |
+| **Build Tool**           | Vite (built-in, blazing fast)                             | CRA/Vite (requires configuration)                                 |
+| **Two-Way Binding**      | Native `v-model`                                          | Manual controlled components                                      |
+| **Developer Experience** | Single File Components (.vue)                             | JSX split across files                                            |
 
 ### Specific Benefits for This Project
 
@@ -77,7 +77,6 @@ This project leverages **Vue 3** with the **Composition API** for several strate
     }
   }
 }
-```
 
 #### 2. **Drag-and-Drop Repositioning**
 
@@ -89,54 +88,88 @@ This project leverages **Vue 3** with the **Composition API** for several strate
 - Visual indicators (blue lines, green outline, orange parent boundary)
 - Smart blocking (prevents invalid operations like root-level siblings)
 
-```
-Example:
-[Node A]          Drag [Node C] to [Node A]
-  ├─ [Node B]     Result: [Node A]
-  └─ [Node C]              ├─ [Node C] (moved as first child)
-                           └─ [Node B]
-```
+Example (longer tree):
+[Root]
+  ├─ [Node A]
+  │    ├─ [Node A1]
+  │    └─ [Node A2]
+  └─ [Node B]
+       ├─ [Node B1]
+       └─ [Node C]
+
+Drag [Node C] to [Node A]:
+- **Drop INSIDE** (green highlight): `Node C` becomes first child of `Node A`
+  Result:
+  [Root]
+    ├─ [Node A]
+    │    ├─ [Node C]  (moved)
+    │    ├─ [Node A1]
+    │    └─ [Node A2]
+    └─ [Node B]
+         └─ [Node B1]
+
+- **Drop BEFORE** (blue line): `Node C` becomes sibling of `Node A`
+  Result (drop BEFORE A):
+  [Root]
+    ├─ [Node C]  (moved as sibling)
+    ├─ [Node A]
+    │    ├─ [Node A1]
+    │    └─ [Node A2]
+    └─ [Node B]
+         └─ [Node B1]
+
+  **Drop AFTER** (blue line): `Node C` becomes sibling of `Node A`
+  Result (drop After A):
+  [Root]
+    ├─ [Node A]
+    │    ├─ [Node A1]
+    │    └─ [Node A2]
+    ├─ [Node C]  (moved as sibling)
+    └─ [Node B]
+         └─ [Node B1]
+
+  **Drop BEFORE Node A1** (orange line): `Node C` becomes sibling of `Node A1`
+  Result (drop After A):
+  [Root]
+    ├─ [Node A]
+    │    ├─ [Node C]  (moved as sibling of A1, Child of A)
+    │    ├─ [Node A1]
+    │    └─ [Node A2]
+    └─ [Node B]
+         └─ [Node B1]
 
 #### 3. **CRUD Operations**
 
 **Create**:
-
 - Blue **+** icon: Add child node (becomes first child)
 - Floating input for quick node naming
 - Handles edge cases: empty values preserved as `old_value`
 
 **Read**:
-
 - Expandable tree view
 - Breadcrumb navigation
 - Selection highlighting (full-width even on overflow)
 
-**Update**:
-
+**Update/Edit**:
 - Double-click node labels for inline rename
 - Keyboard shortcuts: Enter (confirm), Escape (cancel)
 - Preserves key order during rename
 
 **Delete**:
-
 - Red **-** icon with confirmation dialog
 - Prevents accidental root deletion
 - Auto-selects parent after deletion
 
 #### 4. **Undo Functionality**
-
 - Undo last add/delete/rename action
-- Single-click undo (last action only)
+- Undo (last action only)
 - Curved arrow icon in breadcrumb area
 - Disabled state when no history available
 - **Note**: Drag-drop operations are NOT undoable (by design)
-
-```
 Action Flow:
 1. Rename "foo" → "bar"
 2. Click undo button
 3. Restores "foo" instantly
-```
 
 #### 5. **Advanced UI/UX**
 
@@ -171,8 +204,6 @@ Action Flow:
 ---
 
 ## 📁 Project Structure
-
-```
 my-app/
 ├── public/                    # Static assets
 ├── src/
@@ -208,8 +239,16 @@ my-app/
 │   └── main.js               # Application entry point
 │
 ├── index.html                # HTML entry point
+├── Dockerfile                # Production multi-stage build
+├── Dockerfile.dev            # Development image with HMR
+├── docker-compose.yml        # Production orchestration
+├── docker-compose.dev.yml    # Development orchestration
+├── nginx.conf                # Nginx configuration
+├── .dockerignore             # Docker build context ignores
+├── .env.example              # Environment variable template
 ├── jsconfig.json             # JavaScript configuration
 ├── package.json              # Dependencies and scripts
+├── package-lock.json         # Locked dependency tree
 ├── vite.config.js            # Vite build configuration
 ├── tailwind.config.js        # Tailwind CSS configuration
 └── README.md                 # This file
@@ -338,7 +377,7 @@ No environment variables required for basic usage. The application uses browser 
 
 The application includes production-grade Docker configuration with:
 
-- **Multi-stage builds** for optimized image size (~25MB final image)
+- **Multi-stage builds** with current production image ~97MB
 - **Nginx** as production web server
 - **Security headers** and best practices
 - **Health checks** for container orchestration
@@ -560,8 +599,8 @@ nginx:1.25-alpine → Copy nginx.conf → Copy /dist → Optimized runtime image
 
 **Image Sizes:**
 
-- Builder stage: ~500MB (discarded)
-- Final image: ~25MB (nginx + static assets)
+- Production image (Dockerfile): ~97MB
+- Development image (Dockerfile.dev): ~400MB
 
 #### File Structure
 
@@ -1243,14 +1282,6 @@ with an intuitive UI, comprehensive features, and excellent developer experience
 - Build tool [Vite](https://vite.dev/)
 - Inspiration from JSON tree visualizers across the web
 
-### Project Stats
-
-- **Lines of Code**: 1000+
-- **Components**: 8+ Vue components
-- **Features**: 15+ major features
-- **Build Size**: ~25MB (Docker)
-- **Bundle Size**: ~50KB (gzipped)
-
 ---
 
-**Made with ❤️ by Asif Hasan Tonmoy**
+**Made by Asif Hasan Tonmoy**
