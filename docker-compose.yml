@@ -1,0 +1,32 @@
+# Docker Compose for JSON Tree Viewer Application
+
+version: '3.8'
+
+services:
+  # Production service
+  json-tree-viewer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: json-tree-viewer-prod
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - app-network
+    labels:
+      - "com.json-tree-viewer.description=JSON Tree Viewer Application"
+      - "com.json-tree-viewer.version=1.0.0"
+
+networks:
+  app-network:
+    driver: bridge

@@ -287,16 +287,316 @@ No environment variables required for basic usage. The application uses browser 
 
 ## 🐳 Docker Setup
 
-**[PLACEHOLDER]**
+### Overview
 
-Docker configuration will be added to enable containerized deployment.
+The application includes production-grade Docker configuration with:
 
-**Planned Docker Features:**
+- **Multi-stage builds** for optimized image size (~25MB final image)
+- **Nginx** as production web server
+- **Security headers** and best practices
+- **Health checks** for container orchestration
+- **Development mode** with hot reload support
 
-- Multi-stage build for optimized image size
-- Nginx server for production serving
-- Volume mounting for development
-- Docker Compose for orchestration
+### Prerequisites
+
+- **Docker**: v20.10+
+- **Docker Compose**: v2.0+ (included with Docker Desktop)
+
+### Production Deployment
+
+#### Option 1: Docker Run (Quick Start)
+
+```bash
+# Build the production image
+docker build -t json-tree-viewer:latest .
+
+# Run the container
+docker run -d \
+  --name json-tree-viewer \
+  -p 8080:80 \
+  --restart unless-stopped \
+  json-tree-viewer:latest
+
+# Access the application
+# Open browser: http://localhost:8080
+```
+
+#### Option 2: Docker Compose (Recommended)
+
+```bash
+# Build and start the service
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop the service
+docker-compose down
+
+# Rebuild after code changes
+docker-compose up -d --build
+```
+
+**Production Features:**
+
+- Automatic container restart on failure
+- Health check endpoint at `/health`
+- Gzip compression enabled
+- Static asset caching (1 year)
+- Security headers configured
+- SPA routing support (Vue Router)
+
+### Development with Docker
+
+For development with hot module replacement:
+
+```bash
+# Start development environment
+docker-compose -f docker-compose.dev.yml up
+
+# Application available at http://localhost:5173
+# Code changes auto-reload
+
+# Stop development environment
+docker-compose -f docker-compose.dev.yml down
+```
+
+**Development Features:**
+
+- Volume mounting for instant code updates
+- Preserved node_modules in container
+- Full Vite HMR support
+- DevTools access
+
+### Docker Architecture
+
+#### Multi-Stage Build Process
+
+**Stage 1: Builder**
+
+```
+node:20-alpine → Install dependencies → Build application → Output to /dist
+```
+
+**Stage 2: Production**
+
+```
+nginx:1.25-alpine → Copy nginx.conf → Copy /dist → Optimized runtime image
+```
+
+**Image Sizes:**
+
+- Builder stage: ~500MB (discarded)
+- Final image: ~25MB (nginx + static assets)
+
+#### File Structure
+
+```
+├── Dockerfile              # Production multi-stage build
+├── Dockerfile.dev          # Development with HMR
+├── docker-compose.yml      # Production orchestration
+├── docker-compose.dev.yml  # Development orchestration
+├── nginx.conf              # Nginx configuration
+├── .dockerignore           # Exclude files from build context
+└── .env.example            # Environment variables template
+```
+
+### Configuration Details
+
+#### Nginx Configuration Highlights
+
+```nginx
+# Gzip compression
+gzip on;
+gzip_comp_level 6;
+gzip_types text/css application/javascript ...;
+
+# Static asset caching
+location ~* \.(css|js|jpg|png|svg|woff2)$ {
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+}
+
+# Vue Router SPA fallback
+location / {
+    try_files $uri $uri/ /index.html;
+}
+
+# Security headers
+add_header X-Frame-Options "SAMEORIGIN";
+add_header X-Content-Type-Options "nosniff";
+add_header Content-Security-Policy "...";
+```
+
+#### Health Check
+
+The container includes a health check endpoint:
+
+```bash
+# Check container health
+docker inspect --format='{{.State.Health.Status}}' json-tree-viewer
+
+# Manual health check
+curl http://localhost:8080/health
+# Response: healthy
+```
+
+### Advanced Docker Commands
+
+```bash
+# View container logs
+docker logs -f json-tree-viewer
+
+# Execute commands in container
+docker exec -it json-tree-viewer sh
+
+# Inspect container
+docker inspect json-tree-viewer
+
+# View container stats
+docker stats json-tree-viewer
+
+# Remove everything (containers, images, volumes)
+docker-compose down -v --rmi all
+```
+
+### Production Deployment Platforms
+
+#### Docker Hub
+
+```bash
+# Tag for Docker Hub
+docker tag json-tree-viewer:latest username/json-tree-viewer:1.0.0
+
+# Push to Docker Hub
+docker push username/json-tree-viewer:1.0.0
+
+# Pull and run on server
+docker pull username/json-tree-viewer:1.0.0
+docker run -d -p 80:80 username/json-tree-viewer:1.0.0
+```
+
+#### AWS ECS
+
+```bash
+# Tag for ECR
+docker tag json-tree-viewer:latest \
+  123456789012.dkr.ecr.us-east-1.amazonaws.com/json-tree-viewer:latest
+
+# Push to ECR
+docker push 123456789012.dkr.ecr.us-east-1.amazonaws.com/json-tree-viewer:latest
+
+# Deploy via ECS task definition
+```
+
+#### Kubernetes
+
+```bash
+# Create deployment
+kubectl create deployment json-tree-viewer \
+  --image=username/json-tree-viewer:latest
+
+# Expose service
+kubectl expose deployment json-tree-viewer \
+  --type=LoadBalancer --port=80
+
+# Scale replicas
+kubectl scale deployment json-tree-viewer --replicas=3
+```
+
+#### Google Cloud Run
+
+```bash
+# Build for Cloud Run
+docker build -t gcr.io/project-id/json-tree-viewer .
+
+# Push to GCR
+docker push gcr.io/project-id/json-tree-viewer
+
+# Deploy
+gcloud run deploy json-tree-viewer \
+  --image gcr.io/project-id/json-tree-viewer \
+  --platform managed \
+  --allow-unauthenticated
+```
+
+### Environment Variables
+
+```bash
+# Create .env file from template
+cp .env.example .env
+
+# Edit environment variables
+# NODE_ENV=production
+# VITE_API_URL=https://api.example.com
+
+# Run with custom env file
+docker run --env-file .env -p 8080:80 json-tree-viewer
+```
+
+### Troubleshooting
+
+#### Container won't start
+
+```bash
+# Check container logs
+docker logs json-tree-viewer
+
+# Inspect exit code
+docker inspect json-tree-viewer --format='{{.State.ExitCode}}'
+
+# Verify image
+docker images | grep json-tree-viewer
+```
+
+#### Port already in use
+
+```bash
+# Find process using port 8080
+# Linux/Mac:
+lsof -i :8080
+
+# Windows:
+netstat -ano | findstr :8080
+
+# Use different port
+docker run -p 9090:80 json-tree-viewer
+```
+
+#### Build fails
+
+```bash
+# Clear Docker cache
+docker builder prune -a
+
+# Build with no cache
+docker build --no-cache -t json-tree-viewer .
+
+# Check disk space
+docker system df
+```
+
+### Performance Optimization
+
+**Build Time Optimization:**
+
+- Layer caching (package.json copied first)
+- npm ci for reproducible installs
+- Multi-stage build to discard dev dependencies
+
+**Runtime Optimization:**
+
+- Alpine Linux base (minimal footprint)
+- Gzip compression enabled
+- Static asset caching headers
+- HTTP/2 support via Nginx
+
+**Security Best Practices:**
+
+- Non-root user in container
+- Security headers configured
+- Regular base image updates
+- Minimal attack surface
 
 **Coming Soon:**
 
@@ -427,20 +727,6 @@ npm run preview
 - **Event Delegation**: Minimized event listeners on parent elements
 - **Virtual Scrolling**: Not implemented yet (consider for 1000+ nodes)
 
-### Security Considerations
-
-- **JSON Validation**: Server-side validation recommended for production
-- **XSS Prevention**: Vue automatically escapes content
-- **CSRF Protection**: Not applicable (client-side only app)
-- **Content Security Policy**: Configure headers in production
-
-### Accessibility (A11y)
-
-- Keyboard navigation support
-- ARIA labels on interactive elements
-- Focus management for modals
-- Screen reader compatible
-
 ### Future Enhancements
 
 - [ ] Export modified JSON
@@ -456,12 +742,341 @@ npm run preview
 
 ## 📄 License
 
-[Add your license here]
+### JSON Tree Viewer - Dual License
+
+This project is released under a **custom dual-license model** designed to support both open-source development and commercial use:
+
+#### Free & Open-Source License (Dev & Local Use)
+
+```
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to use,
+copy, modify, and distribute the Software for:
+
+✅ Personal development and learning purposes
+✅ Local/internal use within organizations
+✅ Educational institutions and non-profit organizations
+✅ Open-source community projects
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+```
+
+#### Commercial/Production License
+
+For **production-grade deployments** (cloud hosting, SaaS, commercial applications,
+or revenue-generating services), you must obtain explicit written permission from
+the copyright holder.
+
+**Unauthorized production use is prohibited.**
+
+#### Terms & Conditions
+
+- **Development Use**: Fully unrestricted for non-production environments
+- **Production Use**: Requires commercial license agreement
+- **Attribution**: Credit to original author is appreciated but not mandatory for dev use
+- **Modifications**: You may modify the code for personal/local use
+- **Distribution**: For dev/local use only without commercial license
+- **Warranty**: Provided "AS IS" without any warranty
+- **Liability**: Author not liable for any damages
+
+#### How to Request Production License
+
+For commercial use, cloud deployment, or revenue-generating applications:
+
+1. Email: `asif.cse.contact@gmail.com` with subject: **"Production License Request - JSON Tree Viewer"**
+2. Include:
+   - Company/Organization name
+   - Use case description
+   - Deployment environment (cloud provider, scale, etc.)
+   - Expected launch timeline
+3. License will be provided within 5-7 business days
+
+#### License File
+
+Create a `LICENSE` file in your project root to include this license text.
+
+---
 
 ## 🤝 Contributing
 
-[Add contribution guidelines here]
+Thank you for your interest in contributing to JSON Tree Viewer! This project thrives
+on community contributions.
+
+### Ways to Contribute
+
+#### 1. **Report Bugs**
+
+- Use GitHub Issues to report bugs
+- Include reproduction steps
+- Provide environment details (OS, browser, Node version)
+
+**Example Bug Report:**
+
+```
+Title: Tree node selection not working on deeply nested items
+Description: When selecting nodes nested 5+ levels deep, the selection
+doesn't highlight properly on screens with 1024px width.
+Steps to Reproduce:
+1. Import complex JSON with 5+ nested levels
+2. Click on a deeply nested node
+3. Observe: Selection background doesn't show fully
+Expected: Full width selection highlight
+```
+
+#### 2. **Suggest Features**
+
+- Open a GitHub Issue with label `enhancement`
+- Describe the use case and expected behavior
+- Include mockups or examples if applicable
+
+**Example Feature Request:**
+
+```
+Title: Add copy-to-clipboard functionality
+Description: Users should be able to copy individual node values or
+entire subtrees to clipboard for easy sharing.
+Use Case: Debugging API responses quickly
+```
+
+#### 3. **Submit Pull Requests**
+
+**Branch Naming Convention:**
+
+```
+feature/feature-name           # New features
+bugfix/bug-description         # Bug fixes
+docs/documentation-update      # Documentation
+refactor/code-improvement      # Code refactoring
+chore/dependency-update        # Dependencies
+```
+
+**Before Submitting PR:**
+
+1. Fork the repository
+2. Create a feature branch from `main`
+3. Make your changes with clear commit messages
+4. Test thoroughly locally
+5. Update documentation if needed
+6. Ensure no console errors or warnings
+
+**PR Template:**
+
+```markdown
+## Description
+
+Brief description of changes
+
+## Type of Change
+
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Documentation update
+- [ ] Code refactoring
+
+## Testing
+
+How was this tested?
+
+## Checklist
+
+- [ ] Code follows project style
+- [ ] Tests pass locally
+- [ ] Documentation updated
+- [ ] No breaking changes
+```
+
+#### 4. **Improve Documentation**
+
+- Fix typos or unclear explanations
+- Add examples
+- Improve README sections
+- Create tutorials or guides
+
+#### 5. **Code Review**
+
+- Review open PRs
+- Suggest improvements
+- Test on your local environment
+- Provide constructive feedback
+
+### Development Guidelines
+
+#### Code Style
+
+- Use Vue 3 Composition API
+- Use scoped styles in components
+- Follow existing naming conventions
+- Write self-documenting code with comments
+
+#### Commit Messages
+
+```
+✨ feat: Add node search functionality
+🐛 fix: Resolve drag-drop on nested nodes
+📝 docs: Update installation guide
+♻️  refactor: Simplify tree rendering logic
+🧪 test: Add unit tests for undo feature
+🎨 style: Update color scheme to match brand
+⬆️  chore: Update Vue to latest version
+```
+
+#### Testing
+
+- Test in multiple browsers (Chrome, Firefox, Safari, Edge)
+- Test on different screen sizes (mobile, tablet, desktop)
+- Test with complex JSON structures
+- Verify no console errors
+
+#### Performance
+
+- Monitor bundle size with `npm run build`
+- Use Vue DevTools to check unnecessary re-renders
+- Profile with browser DevTools
+- Aim for <100ms interaction response time
+
+### Getting Help
+
+- **Questions**: Open an Issue with label `question`
+- **Discussion**: Use GitHub Discussions
+- **Chat**: Email maintainer for urgent matters
+
+### Code of Conduct
+
+Contributors must:
+
+- Be respectful and inclusive
+- Provide constructive feedback
+- Accept criticism gracefully
+- Follow project guidelines
+- Report violations to maintainer
+
+### Recognition
+
+Contributors will be:
+
+- Mentioned in CHANGELOG for significant contributions
+- Added to CONTRIBUTORS.md file
+- Credited in release notes
+- Featured in README (optional)
+
+### Development Setup
+
+```bash
+# Fork and clone
+git clone https://github.com/your-username/json-tree-viewer.git
+
+# Install dependencies
+npm install
+
+# Create feature branch
+git checkout -b feature/your-feature
+
+# Start development
+npm run dev
+
+# Make changes and test
+# Commit with conventional messages
+git commit -m "feat: description"
+
+# Push to your fork
+git push origin feature/your-feature
+
+# Open Pull Request on GitHub
+```
+
+### Questions Before Contributing?
+
+Email: `asif.cse.contact@gmail.com` with subject: **"Contribution Inquiry"**
+
+We're happy to help and guide you through the contribution process!
+
+---
 
 ## 📧 Contact
 
-[Add contact information here]
+### Developer
+
+**Name:** Asif (Asif CSE KUET)
+
+**Email:** [asif.cse.contact@gmail.com](mailto:asif.cse.contact@gmail.com)
+
+### Inquiry Types
+
+**For Production License:**
+
+```
+Subject: Production License Request - JSON Tree Viewer
+Email: asif.cse.contact@gmail.com
+```
+
+**For Bug Reports:**
+
+```
+Use GitHub Issues with [BUG] label
+Fallback: asif.cse.contact@gmail.com with subject "Bug Report"
+```
+
+**For Feature Requests:**
+
+```
+Use GitHub Issues with [FEATURE] label
+Fallback: asif.cse.contact@gmail.com with subject "Feature Suggestion"
+```
+
+**For Collaboration/Partnership:**
+
+```
+Email: asif.cse.contact@gmail.com
+Subject: Partnership Proposal - JSON Tree Viewer
+```
+
+**For Urgent Issues:**
+
+```
+Email: asif.cse.contact@gmail.com
+Subject: URGENT - [Issue Description]
+Response time: 24-48 hours
+```
+
+### Response Time
+
+- **GitHub Issues**: 24-48 hours
+- **Email Inquiries**: 24-48 hours
+- **Urgent Matters**: 12 hours (marked URGENT)
+- **License Requests**: 5-7 business days
+
+### Social & Links
+
+- **Repository**: [GitHub - JSON Tree Viewer](https://github.com/asif-cse-kuet/tree-explorer)
+- **Developer Portfolio**: [Coming Soon]
+- **LinkedIn**: [Add your LinkedIn URL if desired]
+
+---
+
+## 📄 Additional Notes
+
+### Project History
+
+This project was created to provide a production-grade JSON visualization and manipulation tool
+with an intuitive UI, comprehensive features, and excellent developer experience.
+
+### Acknowledgments
+
+- Built with [Vue.js](https://vuejs.org/)
+- State management with [Pinia](https://pinia.vuejs.org/)
+- Styling with [Tailwind CSS](https://tailwindcss.com/)
+- Build tool [Vite](https://vite.dev/)
+- Inspiration from JSON tree visualizers across the web
+
+### Project Stats
+
+- **Lines of Code**: 1000+
+- **Components**: 8+ Vue components
+- **Features**: 15+ major features
+- **Build Size**: ~25MB (Docker)
+- **Bundle Size**: ~50KB (gzipped)
+
+---
+
+**Made with ❤️ by Asif Hasan Tonmoy**

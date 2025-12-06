@@ -1,0 +1,32 @@
+# Docker Compose for development environment with hot reload
+
+version: '3.8'
+
+services:
+  # Development service with volume mounting
+  json-tree-viewer-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: json-tree-viewer-dev
+    ports:
+      - "5173:5173"  # Vite dev server
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+      - ./vite.config.js:/app/vite.config.js
+      - ./tailwind.config.js:/app/tailwind.config.js
+      - /app/node_modules  # Prevent node_modules from being overwritten
+    environment:
+      - NODE_ENV=development
+      - VITE_HMR_HOST=localhost
+    command: npm run dev -- --host 0.0.0.0
+    networks:
+      - dev-network
+    stdin_open: true
+    tty: true
+
+networks:
+  dev-network:
+    driver: bridge
