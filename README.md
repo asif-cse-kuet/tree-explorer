@@ -387,56 +387,55 @@ Drag [Node C] to [Node A]:
 
 ## 📁 Project Structure
 
+```
 my-app/
-├── public/ # Static assets
+├── public/                      # Static assets
 ├── src/
-│ ├── assets/ # Styles and global assets
-│ │ └── main.css # Tailwind imports & global styles
-│ │
-│ ├── global/ # Shared global components
-│ │ ├── Breadcrumb.vue # Path navigation component
-│ │ ├── DeleteConfirmDialog.vue # Reusable confirmation modal
-│ │ └── UndoButton.vue # Undo last action button
-│ │
-│ ├── module/ # Feature modules
-│ │ ├── components/ # Feature-specific components
-│ │ │ ├── Json.vue # JSON display panel (right side)
-│ │ │ ├── JsonInput.vue # JSON import dialog
-│ │ │ ├── Layout.vue # Two-column layout wrapper
-│ │ │ ├── Tree.vue # Tree container with scroll handling
-│ │ │ ├── TreeNode.vue # Recursive tree node (core component)
-│ │ │ ├── TreeNodeContent.vue # Node label, edit, buttons
-│ │ │ ├── TreeNodeDragHandler.vue # Drag-drop logic & indicators
-│ │ │ └── TreeJsonInput.vue # JSON input with validation
-│ │ │
-│ │ └── pages/ # Page-level components
-│ │ └── IndexPage.vue # Main application page
-│ │
-│ ├── stores/ # Pinia state management
-│ │ ├── index.js # Export all stores
-│ │ └── treeStore/ # Tree state module
-│ │ ├── index.js # Store definition, getters, persist config
-│ │ └── actions.js # All state mutations (CRUD, drag-drop, undo)
-│ │
-│ ├── App.vue # Root component
-│ └── main.js # Application entry point
+│   ├── assets/                  # Styles and global assets
+│   │   └── main.css             # Tailwind imports & global styles
+│   │
+│   ├── global/                  # Shared global components
+│   │   ├── Breadcrumb.vue       # Path navigation component
+│   │   ├── DeleteConfirmDialog.vue # Reusable confirmation modal
+│   │   └── UndoButton.vue       # Undo last action button
+│   │
+│   ├── module/                  # Feature modules
+│   │   ├── components/          # Feature-specific components
+│   │   │   ├── Json.vue         # JSON display panel (right side)
+│   │   │   ├── Layout.vue       # Two-column layout wrapper
+│   │   │   ├── Tree.vue         # Tree container with scroll handling
+│   │   │   ├── TreeJsonInput.vue # JSON import dialog with validation
+│   │   │   ├── TreeNode.vue     # Recursive tree node (core component)
+│   │   │   ├── TreeNodeContent.vue # Node label, edit, buttons
+│   │   │   └── TreeNodeDragHandler.vue # Drag-drop logic & indicators
+│   │   │
+│   │   └── pages/               # Page-level components
+│   │       └── IndexPage.vue    # Main application page
+│   │
+│   ├── stores/                  # Pinia state management
+│   │   ├── index.js             # Export all stores
+│   │   └── treeStore/           # Tree state module
+│   │       ├── index.js         # Store definition, getters, persist config
+│   │       └── actions.js       # All state mutations (CRUD, drag-drop, undo)
+│   │
+│   ├── App.vue                  # Root component
+│   └── main.js                  # Application entry point
 │
-├── index.html # HTML entry point
-├── Dockerfile # Production multi-stage build
-├── Dockerfile.dev # Development image with HMR
-├── docker-compose.yml # Production orchestration
-├── docker-compose.dev.yml # Development orchestration
-├── nginx.conf # Nginx configuration
-├── .dockerignore # Docker build context ignores
-├── .env.example # Environment variable template
-├── jsconfig.json # JavaScript configuration
-├── package.json # Dependencies and scripts
-├── package-lock.json # Locked dependency tree
-├── vite.config.js # Vite build configuration
-├── tailwind.config.js # Tailwind CSS configuration
-└── README.md # This file
-
-````
+├── index.html                   # HTML entry point
+├── Dockerfile                   # Production multi-stage build
+├── Dockerfile.dev               # Development image with HMR
+├── docker-compose.yml           # Production orchestration
+├── docker-compose.dev.yml       # Development orchestration
+├── nginx.conf                   # Nginx configuration
+├── .dockerignore                # Docker build context ignores
+├── .env.example                 # Environment variable template
+├── jsconfig.json                # JavaScript configuration
+├── package.json                 # Dependencies and scripts
+├── package-lock.json            # Locked dependency tree
+├── vite.config.js               # Vite build configuration
+├── tailwind.config.js           # Tailwind CSS configuration
+└── README.md                    # This file
+```
 
 ### Key File Purposes
 
@@ -483,7 +482,7 @@ git clone <repository-url>
 cd my-app
 # Install dependencies
 npm install
-````
+```
 
 ### Getting Started - Choose Your Path
 
