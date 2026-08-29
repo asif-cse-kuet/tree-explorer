@@ -6,7 +6,6 @@ export const useTreeStore = defineStore('tree', {
     jsonData: null,
     error: '',
     isLoading: false,
-    currentPath: [],
     selectedPath: [],
     history: [], // For Tracking undo history for add/delete/rename only
   }),

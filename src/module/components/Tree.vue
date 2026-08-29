@@ -13,6 +13,10 @@ const openJsonInput = () => {
   jsonInputRef.value?.openDialog();
 };
 
+const clearData = () => {
+  treeStore.clearJsonData();
+};
+
 const handleTreeDeleteRequest = (deleteData) => {
   deleteDialog.value?.openDialog(deleteData.nodeKey, (confirmed) => {
     if (confirmed) {
@@ -43,10 +47,26 @@ provide('handleTreeDelete', handleTreeDeleteRequest);
       </div>
       
       <!-- Show tree when data exists -->
-      <div v-else class="flex-1 overflow-y-auto overflow-x-auto p-3 font-mono text-normal text-gray-800 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-        <div class="tree">
-          <!-- Render tree recursively via slot -->
-          <slot name="tree" :jsonData="treeStore.jsonData"></slot>
+      <div v-else class="flex-1 flex flex-col min-h-0">
+        <div class="flex gap-2 mb-3 shrink-0">
+          <button
+            @click="openJsonInput"
+            class="flex-1 px-3 py-2 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700 transition-colors text-sm"
+          >
+            Re-import
+          </button>
+          <button
+            @click="clearData"
+            class="flex-1 px-3 py-2 bg-gray-200 text-gray-800 rounded font-semibold hover:bg-gray-300 transition-colors text-sm"
+          >
+            Clear data
+          </button>
+        </div>
+        <div class="flex-1 overflow-y-auto overflow-x-auto p-3 font-mono text-normal text-gray-800 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+          <div class="tree">
+            <!-- Render tree recursively via slot -->
+            <slot name="tree" :jsonData="treeStore.jsonData"></slot>
+          </div>
         </div>
       </div>
     </div>

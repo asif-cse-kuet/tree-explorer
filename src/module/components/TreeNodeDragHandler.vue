@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useTreeStore } from '../../stores';
+import { isInvalidMove } from '../../stores/treeStore/utils';
 
 const props = defineProps({
   nodeKey: String,
@@ -27,9 +28,20 @@ const isImmediateParentOfDraggedNode = (sourcePath) => {
   const sourceArray = sourcePath.replace('root.', '').split('.');
   const targetArray = props.path.replace('root.', '').split('.');
   
-  // Target is immediate parent if source is one level deeper and shares same parent path
   return sourceArray.length === targetArray.length + 1 &&
     sourceArray.slice(0, -1).join('.') === targetArray.join('.');
+};
+
+const getPathArrays = (sourcePath) => {
+  const sourceArray = sourcePath.replace('root.', '').split('.');
+  const targetArray = props.path.replace('root.', '').split('.');
+  return { sourceArray, targetArray };
+};
+
+const wouldCreateCycle = (sourcePath, position) => {
+  if (!sourcePath) return true;
+  const { sourceArray, targetArray } = getPathArrays(sourcePath);
+  return isInvalidMove(sourceArray, targetArray, position);
 };
 
 const startDrag = (e) => {
@@ -89,6 +101,14 @@ const dragOver = (e) => {
     e.dataTransfer.dropEffect = 'none';
     return;
   }
+
+  if (wouldCreateCycle(sourcePath, dropPosition.value)) {
+    dropPosition.value = null;
+    isDragOver.value = false;
+    isParentSiblingDrop.value = false;
+    e.dataTransfer.dropEffect = 'none';
+    return;
+  }
   
   isDragOver.value = true;
 };
@@ -107,10 +127,10 @@ const drop = (e) => {
   
   // Don't drop on same node
   if (!sourcePath || sourcePath === props.path) return;
-  
-  // Parse paths and move node
-  const sourceArray = sourcePath.replace('root.', '').split('.');
-  const targetArray = props.path.replace('root.', '').split('.');
+
+  const { sourceArray, targetArray } = getPathArrays(sourcePath);
+
+  if (wouldCreateCycle(sourcePath, currentDropPosition)) return;
   
   treeStore.moveNode(sourceArray, targetArray, currentDropPosition);
 };

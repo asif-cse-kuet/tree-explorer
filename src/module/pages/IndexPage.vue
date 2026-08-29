@@ -1,6 +1,7 @@
 
 <script setup>
-import { onMounted } from 'vue';
+import { computed } from 'vue';
+import { useTreeStore } from '../../stores';
 import Layout from '../components/Layout.vue';
 import Breadcrumb from '../../global/Breadcrumb.vue';
 import UndoButton from '../../global/UndoButton.vue';
@@ -8,7 +9,9 @@ import Json from '../components/Json.vue';
 import Tree from '../components/Tree.vue';
 import TreeNode from '../components/TreeNode.vue';
 
-onMounted(() => {});
+const treeStore = useTreeStore();
+
+const leftBreadcrumbPath = computed(() => ['Tree', ...treeStore.selectedPath]);
 </script>
 
 <template>
@@ -17,7 +20,7 @@ onMounted(() => {});
             <Tree>
                 <template #breadcrumb>
                     <div class="flex items-center justify-between gap-4">
-                        <Breadcrumb :path="['Tree']"/>
+                        <Breadcrumb :path="leftBreadcrumbPath"/>
                         <div class="h-20 content-end">
                             <UndoButton />
                         </div>
